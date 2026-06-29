@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitGirl Helper — Cloudflare Deployment Guide</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f1a;color:#e2e8f0;line-height:1.7;padding:0 0 80px}
+.hero{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e1b4b 100%);padding:60px 20px;text-align:center;border-bottom:1px solid #3730a3}
+.hero h1{font-size:32px;font-weight:700;margin-bottom:8px;background:linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:#94a3b8;font-size:16px;max-width:600px;margin:0 auto}
+.wrap{max-width:780px;margin:0 auto;padding:32px 20px}
+
+/* Step Cards */
+.step{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;margin-bottom:24px;position:relative;overflow:hidden}
+.step::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#60a5fa,#a78bfa)}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:50%;font-weight:800;font-size:16px;color:#fff;margin-bottom:12px}
+.step h2{font-size:20px;font-weight:700;margin-bottom:6px;color:#f1f5f9}
+.step h2 .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle}
+.tag-time{background:rgba(251,191,36,.15);color:#fbbf24}
+.tag-once{background:rgba(74,222,128,.12);color:#4ade80}
+.step .sub{color:#94a3b8;font-size:14px;margin-bottom:16px}
+
+/* Instruction items */
+.ins{counter-reset:ins}
+.ins li{list-style:none;position:relative;padding:10px 0 10px 36px;border-bottom:1px solid #1e293b;font-size:14px;counter-increment:ins}
+.ins li::before{content:counter(ins);position:absolute;left:0;top:10px;width:24px;height:24px;background:#334155;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#94a3b8}
+.ins li:last-child{border-bottom:none}
+.ins li strong{color:#93c5fd}
+.ins li em{color:#fbbf24;font-style:normal}
+
+/* Code blocks */
+.code-block{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:16px;margin:12px 0;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:12.5px;line-height:1.8;overflow-x:auto;position:relative;color:#e2e8f0}
+.code-block .comment{color:#475569}
+.code-block .str{color:#a5f3fc}
+.code-block .key{color:#c084fc}
+
+/* Action boxes */
+.action{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));border:1px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:12px 0;font-size:13px;color:#93c5fd;display:flex;align-items:flex-start;gap:10px}
+.action .icon{font-size:20px;flex-shrink:0}
+
+.warn{background:rgba(251,191,36,.06);border-color:#fbbf24;color:#fbbf24}
+.success-box{background:rgba(74,222,128,.06);border-color:#4ade80;color:#4ade80}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.tbl th{text-align:left;padding:10px 12px;background:#0f172a;color:#94a3b8;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #334155}
+.tbl td{padding:10px 12px;border-bottom:1px solid #1e293b;color:#e2e8f0}
+.tbl td:first-child{font-weight:600;color:#93c5fd;font-family:'Cascadia Code',Consolas,monospace;font-size:12px}
+.tbl .secret{color:#f87171;font-size:10px;font-weight:600;padding:2px 6px;background:rgba(248,113,113,.1);border-radius:4px}
+.tbl .text{color:#4ade80;font-size:10px;font-weight:600;padding:2px 6px;background:rgba(74,222,128,.1);border-radius:4px}
+
+/* Visual mockup of CF dashboard */
+.cf-mock{background:#1a1a2e;border:1px solid #334155;border-radius:12px;overflow:hidden;margin:16px 0}
+.cf-bar{background:#16213e;padding:8px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #334155}
+.cf-dot{width:10px;height:10px;border-radius:50%}
+.cf-dot.r{background:#f87171}.cf-dot.y{background:#fbbf24}.cf-dot.g{background:#4ade80}
+.cf-bar span{font-size:11px;color:#64748b;margin-left:8px;font-family:monospace}
+.cf-body{padding:20px;font-size:13px;color:#94a3b8}
+.cf-body .highlight{color:#60a5fa;font-weight:600}
+.cf-body .btn-mock{display:inline-block;padding:6px 16px;background:#3b82f6;color:#fff;border-radius:6px;font-size:12px;font-weight:600;margin:4px 4px 4px 0}
+.cf-body .btn-mock.sec{background:#334155;color:#94a3b8}
+.cf-body .field{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:8px 12px;margin:6px 0;font-family:monospace;font-size:12px;color:#60a5fa;display:block}
+
+/* Arrow connector */
+.connector{text-align:center;padding:8px 0;color:#475569;font-size:22px}
+
+/* Screenshot placeholders with visual mockups */
+.screen{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:20px;margin:12px 0;text-align:center;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.screen .label{font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:1px}
+.screen .visual{font-size:40px}
+
+/* Navigation */
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,26,.95);backdrop-filter:blur(10px);border-top:1px solid #1e293b;padding:10px 20px;display:flex;justify-content:center;gap:6px;z-index:10}
+.nav a{padding:6px 14px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#94a3b8;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s}
+.nav a:hover,.nav a.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
+
+/* File reference */
+.file-ref{display:inline-flex;align-items:center;gap:4px;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:3px 10px;font-family:monospace;font-size:12px;color:#a78bfa}
+
+@media(max-width:600px){
+  .hero{padding:40px 16px}.hero h1{font-size:24px}
+  .wrap{padding:20px 12px}.step{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>☁️ Cloudflare Deployment Guide</h1>
+  <p>Step-by-step: Deploy FitGirl Helper as a website using Cloudflare Workers + Pages + GitHub Actions</p>
+</div>
+
+<div class="wrap">
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- OVERVIEW -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="overview">
+  <div class="step-num">☁️</div>
+  <h2>Overview — What You're Building</h2>
+  <p class="sub">3 pieces that work together. Total setup time: ~10 minutes.</p>
+
+  <div class="cf-mock">
+    <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>architecture</span></div>
+    <div class="cf-body" style="text-align:center;line-height:2.2">
+      <div>🌐 <span class="highlight">Cloudflare Pages</span> — hosts the website (what users see)</div>
+      <div style="color:#475569">↕ calls API</div>
+      <div>⚡ <span class="highlight">Cloudflare Worker</span> — the hidden backend (scrapes pages, triggers extraction)</div>
+      <div style="color:#475569">↕ triggers workflow</div>
+      <div>🤖 <span class="highlight">GitHub Actions</span> — runs Chrome to bypass Cloudflare &amp; extract direct links</div>
+    </div>
+  </div>
+
+  <div class="action">
+    <div class="icon">📁</div>
+    <div>
+      <strong>Files you'll need:</strong><br>
+      <span class="file-ref">📄 WORKER_CODE.js</span> → paste into Cloudflare Worker<br>
+      <span class="file-ref">📁 site/index.html</span> → deployed via Cloudflare Pages<br>
+      <span class="file-ref">📁 .github/workflows/</span> + <span class="file-ref">📁 scripts/</span> → pushed to GitHub repo
+    </div>
+  </div>
+</div>
+
+<div class="connector">▼</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- STEP 1: GitHub Repo -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="step1">
+  <div class="step-num">1</div>
+  <h2>Push Code to GitHub <span class="tag tag-once">one-time</span> <span class="tag tag-time">~2 min</span></h2>
+  <p class="sub">Create a GitHub repo with the workflow + extraction script.</p>
+
+  <ol class="ins">
+    <li>Go to <strong>github.com/new</strong> and create a new repository (e.g. <em>fitgirl_helper_web</em>)</li>
+    <li>Clone it locally and copy these files into it:
+      <div class="code-block">
+<span class="comment"># Your repo should look like this:</span>
+fitgirl_helper_web/
+├── .github/workflows/
+│   └── extract-links.yml    <span class="comment"># GitHub Actions workflow</span>
+├── scripts/
+│   └── extract.py           <span class="comment"># Python extraction script</span>
+├── site/
+│   └── index.html           <span class="comment"># Website frontend</span>
+└── WORKER_CODE.js           <span class="comment"># Copy-paste into Cloudflare</span>
+      </div>
+    </li>
+    <li>Push to GitHub:
+      <div class="code-block">
+git add -A
+git commit -m "initial commit"
+git push origin main
+      </div>
+    </li>
+    <li>Create the <em>gh-pages</em> branch (where extraction results go):
+      <div class="code-block">
+git checkout --orphan gh-pages
+git rm -rf .
+mkdir results
+touch results/.gitkeep
+git add results/
+git commit -m "init gh-pages"
+git push origin gh-pages
+git checkout main
+      </div>
+    </li>
+  </ol>
+
+  <div class="action success-box">
+    <div class="icon">✅</div>
+    <div>Your repo is ready. Note the repo name — you'll need it in Step 3.</div>
+  </div>
+</div>
+
+<div class="connector">▼</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- STEP 2: GitHub PAT -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="step2">
+  <div class="step-num">2</div>
+  <h2>Create GitHub Token <span class="tag tag-once">one-time</span> <span class="tag tag-time">~1 min</span></h2>
+  <p class="sub">The Worker needs a token to trigger GitHub Actions on your behalf.</p>
+
+  <ol class="ins">
+    <li>Go to <strong><a href="https://github.com/settings/tokens" style="color:#60a5fa">github.com/settings/tokens</a></strong></li>
+    <li>Click <strong>"Generate new token (classic)"</strong></li>
+    <li>Name it: <em>fitgirl-worker</em></li>
+    <li>Set expiration to <em>No expiration</em> (or your preference)</li>
+    <li>Check these scopes:<br><br>
+      ✅ <strong>repo</strong> (full control of private repositories)<br>
+      ✅ <strong>workflow</strong> (update GitHub Action workflows)
+    </li>
+    <li>Click <strong>"Generate token"</strong></li>
+    <li>
+      <div class="action warn">
+        <div class="icon">⚠️</div>
+        <div><strong>COPY THE TOKEN NOW!</strong> It starts with <code>ghp_</code> and you won't see it again. Save it somewhere safe temporarily.</div>
+      </div>
+    </li>
+  </ol>
+</div>
+
+<div class="connector">▼</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- STEP 3: Cloudflare Worker -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="step3">
+  <div class="step-num">3</div>
+  <h2>Create the Cloudflare Worker <span class="tag tag-once">one-time</span> <span class="tag tag-time">~3 min</span></h2>
+  <p class="sub">This is the hidden backend that scrapes pages and triggers extraction.</p>
+
+  <h3 style="color:#e2e8f0;margin:16px 0 8px;font-size:15px">3a. Create the Worker</h3>
+
+  <ol class="ins">
+    <li>Go to <strong>Cloudflare Dashboard</strong> → <strong>Workers &amp; Pages</strong></li>
+    <li>Click the blue <strong>"Create"</strong> button</li>
+    <li>You'll see this screen:
+      <div class="cf-mock">
+        <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>dash.cloudflare.com — Workers & Pages → Create</span></div>
+        <div class="cf-body">
+          <div style="font-size:16px;font-weight:600;color:#e2e8f0;margin-bottom:12px">Select a method</div>
+          <div style="margin-bottom:6px;color:#e2e8f0">Ship something new</div>
+          <div style="color:#64748b;font-size:12px;margin-bottom:16px">Select from a git repo, drag and drop your code or select a template.</div>
+          <div class="btn-mock sec">Continue with GitHub</div>
+          <div class="btn-mock sec">Connect GitLab</div>
+          <div class="btn-mock" style="background:#f97316">👉 Start with Hello World!</div>
+          <div style="font-size:11px;color:#64748b;margin-top:8px">Select a template</div>
+        </div>
+      </div>
+    </li>
+    <li>Click <strong>"Start with Hello World!"</strong></li>
+    <li>Set the Worker name to: <em>fitgirl-helper-api</em>
+      <div class="cf-mock">
+        <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>Name your Worker</span></div>
+        <div class="cf-body">
+          <div style="color:#64748b;font-size:12px;margin-bottom:4px">Worker name</div>
+          <div class="field">fitgirl-helper-api</div>
+          <div style="color:#475569;font-size:11px;margin-top:4px">Your Worker will be deployed to: <span class="highlight">fitgirl-helper-api.your-subdomain.workers.dev</span></div>
+          <div style="margin-top:12px"><div class="btn-mock">Deploy</div></div>
+        </div>
+      </div>
+    </li>
+    <li>Click <strong>"Deploy"</strong> — it creates a hello-world Worker</li>
+    <li>You'll see a success screen. Click <strong>"Edit Code"</strong>
+      <div class="cf-mock">
+        <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>Worker deployed successfully!</span></div>
+        <div class="cf-body" style="text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🎉</div>
+          <div style="color:#e2e8f0;font-weight:600;margin-bottom:12px">Your Worker is live!</div>
+          <div class="btn-mock" style="background:#f97316">👉 Edit Code</div>
+          <div class="btn-mock sec">Configure Worker</div>
+        </div>
+      </div>
+    </li>
+    <li><strong>Select ALL the existing code</strong> in the editor (Ctrl+A) and <strong>DELETE it</strong></li>
+    <li>Open the file <span class="file-ref">📄 WORKER_CODE.js</span> from the project</li>
+    <li><strong>Copy ALL of WORKER_CODE.js</strong> and <strong>paste</strong> it into the Cloudflare editor</li>
+    <li>Click <strong>"Deploy"</strong> (top-right blue button)</li>
+  </ol>
+
+  <div class="action success-box">
+    <div class="icon">✅</div>
+    <div>Worker code is deployed! Now add secrets.</div>
+  </div>
+
+  <h3 style="color:#e2e8f0;margin:20px 0 8px;font-size:15px">3b. Add Secrets to the Worker</h3>
+
+  <ol class="ins" style="counter-reset:ins 10">
+    <li>Go back to the Worker overview (click the Worker name in the sidebar)</li>
+    <li>Click <strong>"Settings"</strong> tab at the top</li>
+    <li>In the left sidebar, click <strong>"Variables and Secrets"</strong>
+      <div class="cf-mock">
+        <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>fitgirl-helper-api → Settings → Variables and Secrets</span></div>
+        <div class="cf-body">
+          <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:12px">Environment Variables</div>
+          <div class="btn-mock">+ Add</div>
+        </div>
+      </div>
+    </li>
+    <li>Click <strong>"+ Add"</strong> and add these <strong>three</strong> variables:</li>
+  </ol>
+
+  <table class="tbl">
+    <thead>
+      <tr><th>Variable Name</th><th>Type</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GITHUB_TOKEN</td>
+        <td><span class="secret">🔒 Secret</span></td>
+        <td>The <code>ghp_xxx</code> token you created in Step 2</td>
+      </tr>
+      <tr>
+        <td>GITHUB_OWNER</td>
+        <td><span class="text">📝 Text</span></td>
+        <td>Your GitHub username (e.g. <code>MacReyhan</code>)</td>
+      </tr>
+      <tr>
+        <td>GITHUB_REPO</td>
+        <td><span class="text">📝 Text</span></td>
+        <td>Your repo name (e.g. <code>fitgirl_helper_web</code>)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="cf-mock">
+    <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>Adding variables</span></div>
+    <div class="cf-body">
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px">
+        <div class="field" style="margin:0">GITHUB_TOKEN</div>
+        <div style="color:#f87171;font-size:11px;font-weight:600">🔒 Secret</div>
+        <div class="field" style="margin:0">ghp_xxxxxxxxxxxx</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px">
+        <div class="field" style="margin:0">GITHUB_OWNER</div>
+        <div style="color:#4ade80;font-size:11px;font-weight:600">📝 Text</div>
+        <div class="field" style="margin:0">MacReyhan</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px">
+        <div class="field" style="margin:0">GITHUB_REPO</div>
+        <div style="color:#4ade80;font-size:11px;font-weight:600">📝 Text</div>
+        <div class="field" style="margin:0">fitgirl_helper_web</div>
+      </div>
+      <div class="btn-mock">Save and deploy</div>
+    </div>
+  </div>
+
+  <ol class="ins" style="counter-reset:ins 14">
+    <li>Click <strong>"Save and deploy"</strong></li>
+    <li>
+      <strong>Copy your Worker URL</strong> — it looks like:<br>
+      <div class="code-block" style="margin:8px 0"><span class="str">https://fitgirl-helper-api.your-subdomain.workers.dev</span></div>
+      You'll need this URL in the next step!
+    </li>
+  </ol>
+
+  <div class="action success-box">
+    <div class="icon">✅</div>
+    <div>Worker is live with secrets! This is your hidden backend — users never see any tokens.</div>
+  </div>
+</div>
+
+<div class="connector">▼</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- STEP 4: Update Website -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="step4">
+  <div class="step-num">4</div>
+  <h2>Set Worker URL in Website <span class="tag tag-time">~30 sec</span></h2>
+  <p class="sub">Tell the frontend where its backend lives.</p>
+
+  <ol class="ins">
+    <li>Open <span class="file-ref">📄 site/index.html</span></li>
+    <li>Find this line near the bottom (in the <code>&lt;script&gt;</code> section):
+      <div class="code-block">
+<span class="key">const</span> API_URL = <span class="str">'%%WORKER_URL%%'</span>;
+      </div>
+    </li>
+    <li>Replace <code>%%WORKER_URL%%</code> with your actual Worker URL:
+      <div class="code-block">
+<span class="key">const</span> API_URL = <span class="str">'https://fitgirl-helper-api.your-subdomain.workers.dev'</span>;
+      </div>
+    </li>
+    <li>Save the file and commit + push to GitHub:
+      <div class="code-block">
+git add site/index.html
+git commit -m "set worker URL"
+git push origin main
+      </div>
+    </li>
+  </ol>
+</div>
+
+<div class="connector">▼</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- STEP 5: Cloudflare Pages -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="step5">
+  <div class="step-num">5</div>
+  <h2>Deploy Website to Cloudflare Pages <span class="tag tag-once">one-time</span> <span class="tag tag-time">~3 min</span></h2>
+  <p class="sub">Host the frontend for free on Cloudflare Pages.</p>
+
+  <ol class="ins">
+    <li>Go to <strong>Cloudflare Dashboard</strong> → <strong>Workers &amp; Pages</strong></li>
+    <li>Click the blue <strong>"Create"</strong> button</li>
+    <li>This time, click <strong>"Continue with GitHub"</strong> (or <strong>"Pages"</strong> tab at the top)
+      <div class="cf-mock">
+        <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>Pages → Connect to Git</span></div>
+        <div class="cf-body">
+          <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:8px">Connect your GitHub account</div>
+          <div class="btn-mock">Connect GitHub</div>
+        </div>
+      </div>
+    </li>
+    <li>Authorize Cloudflare to access your GitHub (if not already done)</li>
+    <li>Select your repository: <em>fitgirl_helper_web</em></li>
+    <li>Configure the build settings:
+      <div class="cf-mock">
+        <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>Configure build settings</span></div>
+        <div class="cf-body">
+          <div style="color:#64748b;font-size:12px;margin-bottom:4px">Project name</div>
+          <div class="field">fitgirl-helper</div>
+
+          <div style="color:#64748b;font-size:12px;margin-bottom:4px;margin-top:12px">Production branch</div>
+          <div class="field">main</div>
+
+          <div style="color:#64748b;font-size:12px;margin-bottom:4px;margin-top:12px">Framework preset</div>
+          <div class="field">None</div>
+
+          <div style="color:#64748b;font-size:12px;margin-bottom:4px;margin-top:12px">Build command</div>
+          <div class="field" style="color:#475569">(leave empty)</div>
+
+          <div style="color:#64748b;font-size:12px;margin-bottom:4px;margin-top:12px">Build output directory 👈 <span style="color:#f97316;font-weight:600">IMPORTANT</span></div>
+          <div class="field" style="border-color:#f97316">site</div>
+
+          <div style="margin-top:16px"><div class="btn-mock">Save and Deploy</div></div>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="action warn">
+        <div class="icon">⚠️</div>
+        <div>Make sure <strong>Build output directory</strong> is set to <code>site</code> (not <code>/</code> or <code>public</code>). This tells Cloudflare to only serve the <code>site/</code> folder.</div>
+      </div>
+    </li>
+    <li>Click <strong>"Save and Deploy"</strong></li>
+    <li>Wait ~30 seconds for deployment</li>
+  </ol>
+
+  <div class="action success-box">
+    <div class="icon">🎉</div>
+    <div>
+      <strong>Your site is live!</strong><br>
+      URL: <code>https://fitgirl-helper.pages.dev</code> (or whatever you named it)<br>
+      Every push to <code>main</code> will auto-redeploy.
+    </div>
+  </div>
+</div>
+
+<div class="connector">▼</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- DONE -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="done" style="border-color:#4ade80">
+  <div class="step-num" style="background:linear-gradient(135deg,#16a34a,#4ade80)">✓</div>
+  <h2 style="color:#4ade80">You're Done! 🎉</h2>
+  <p class="sub">Here's what happens when someone uses your site:</p>
+
+  <div class="cf-mock">
+    <div class="cf-bar"><div class="cf-dot r"></div><div class="cf-dot y"></div><div class="cf-dot g"></div><span>User experience</span></div>
+    <div class="cf-body" style="line-height:2.4">
+      <div>1️⃣ User opens <span class="highlight">fitgirl-helper.pages.dev</span></div>
+      <div>2️⃣ Pastes a FitGirl URL → clicks <strong>Fetch</strong></div>
+      <div>3️⃣ <span style="color:#475569">→ Website calls your Worker → Worker scrapes the page → returns links instantly</span></div>
+      <div>4️⃣ User selects parts → clicks <strong>Extract</strong></div>
+      <div>5️⃣ <span style="color:#475569">→ Worker triggers GitHub Actions → Chrome runs → bypasses Cloudflare → saves results</span></div>
+      <div>6️⃣ <span style="color:#475569">→ Website polls Worker → Worker checks GitHub → returns results when ready</span></div>
+      <div>7️⃣ Direct download links appear → user copies them! 🎯</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px">
+    <strong style="color:#e2e8f0">The user never sees:</strong>
+    <ul style="margin:8px 0 0 20px;font-size:13px;color:#94a3b8">
+      <li>No GitHub tokens</li>
+      <li>No API configuration</li>
+      <li>No setup screens</li>
+      <li>No source code secrets</li>
+    </ul>
+  </div>
+
+  <table class="tbl" style="margin-top:16px">
+    <thead><tr><th>Where</th><th>What</th><th>Users See It?</th></tr></thead>
+    <tbody>
+      <tr><td>Cloudflare Worker env</td><td>GITHUB_TOKEN, OWNER, REPO</td><td style="color:#4ade80">❌ No — encrypted server-side</td></tr>
+      <tr><td>GitHub repo</td><td>Workflow + extract script</td><td style="color:#4ade80">❌ No — runs server-side</td></tr>
+      <tr><td>Website source code</td><td>Only the Worker URL</td><td style="color:#fbbf24">⚠️ Worker URL visible but harmless</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- TROUBLESHOOTING -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="step" id="trouble" style="margin-top:32px">
+  <div class="step-num">?</div>
+  <h2>Troubleshooting</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Problem</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td style="font-family:var(--font);color:#f87171">"Server not configured"</td><td>You forgot to add GITHUB_TOKEN / GITHUB_OWNER / GITHUB_REPO as Worker variables</td></tr>
+      <tr><td style="font-family:var(--font);color:#f87171">Fetch works but Extract never finishes</td><td>Check your GitHub repo → Actions tab for failed runs. Common: wrong PAT scopes.</td></tr>
+      <tr><td style="font-family:var(--font);color:#f87171">"GitHub 404" error</td><td>Make sure <code>extract-links.yml</code> exists in <code>.github/workflows/</code> on the <code>main</code> branch</td></tr>
+      <tr><td style="font-family:var(--font);color:#f87171">CORS error in browser console</td><td>Make sure the Worker has the CORS headers (the provided code includes them)</td></tr>
+      <tr><td style="font-family:var(--font);color:#f87171">Results never appear after extraction</td><td>Check that <code>gh-pages</code> branch exists. The workflow commits results there.</td></tr>
+      <tr><td style="font-family:var(--font);color:#f87171">Want a custom domain?</td><td>Cloudflare Pages → Custom domains → add your domain. Free SSL included.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<div class="nav">
+  <a href="#overview">Overview</a>
+  <a href="#step1">1. GitHub</a>
+  <a href="#step2">2. Token</a>
+  <a href="#step3">3. Worker</a>
+  <a href="#step4">4. URL</a>
+  <a href="#step5">5. Pages</a>
+  <a href="#done">✓ Done</a>
+</div>
+
+</body>
+</html>

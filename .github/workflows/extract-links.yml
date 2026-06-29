@@ -8,11 +8,11 @@ on:
         required: true
         type: string
       request_id:
-        description: 'Unique request ID for result tracking'
+        description: 'Unique request ID'
         required: true
         type: string
       selected_indices:
-        description: 'Comma-separated indices of selected links (empty = all)'
+        description: 'Comma-separated indices (empty=all)'
         required: false
         type: string
         default: ''
@@ -24,43 +24,27 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4 selenium undetected-chromedriver
-
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
+      - run: pip install requests beautifulsoup4 selenium undetected-chromedriver
+      - uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: 'stable'
-
       - name: Run extraction
         env:
           FITGIRL_URL: ${{ github.event.inputs.fitgirl_url }}
           REQUEST_ID: ${{ github.event.inputs.request_id }}
           SELECTED_INDICES: ${{ github.event.inputs.selected_indices }}
         run: python scripts/extract.py
-
       - name: Commit results to gh-pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Save result file path
           RESULT_FILE="results/${{ github.event.inputs.request_id }}.json"
-
-          # Stash the result file
           cp "$RESULT_FILE" /tmp/result.json
-
-          # Switch to gh-pages (create if doesn't exist)
           git fetch origin gh-pages || true
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
             git checkout gh-pages
@@ -68,12 +52,8 @@ jobs:
             git checkout --orphan gh-pages
             git rm -rf . 2>/dev/null || true
           fi
-
-          # Place the result
           mkdir -p results
           cp /tmp/result.json "$RESULT_FILE"
-
-          # Commit and push
           git add results/
           git commit -m "result: ${{ github.event.inputs.request_id }}" --allow-empty
           git push origin gh-pages
