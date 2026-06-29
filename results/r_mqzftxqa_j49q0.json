@@ -1,0 +1,8 @@
+{
+  "request_id": "r_mqzftxqa_j49q0",
+  "url": "https://fitgirl-repacks.site/assassins-creed-origins/",
+  "status": "error",
+  "timestamp": "2026-06-29T16:34:39.770328+00:00",
+  "direct_links": [],
+  "error": "Message: session not created: cannot connect to chrome at 127.0.0.1:48359\nfrom session not created: This version of ChromeDriver only supports Chrome version 150\nCurrent browser version is 149.0.7827.155; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception\nStacktrace:\n#0 0x55fbc690966a <unknown>\n#1 0x55fbc62e1b19 <unknown>\n#2 0x55fbc63277ff <unknown>\n#3 0x55fbc63265b0 <unknown>\n#4 0x55fbc631b66f <unknown>\n#5 0x55fbc636b70e <unknown>\n#6 0x55fbc636adfc <unknown>\n#7 0x55fbc632a65f <unknown>\n#8 0x55fbc632b4c1 <unknown>\n#9 0x55fbc68ce9b7 <unknown>\n#10 0x55fbc68cd188 <unknown>\n#11 0x55fbc68b7e66 <unknown>\n#12 0x55fbc68cdd5a <unknown>\n#13 0x55fbc689fda0 <unknown>\n#14 0x55fbc68f4e28 <unknown>\n#15 0x55fbc68f4fc5 <unknown>\n#16 0x55fbc690821e <unknown>\n#17 0x7f923989caa4 <unknown>\n#18 0x7f9239929c6c <unknown>\n"
+}
