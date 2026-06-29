@@ -26,19 +26,26 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests beautifulsoup4 selenium undetected-chromedriver
-      - uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: 'stable'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 selenium undetected-chromedriver
+
+      - name: Check Chrome version
+        run: |
+          google-chrome --version || true
+          which google-chrome || true
+
       - name: Run extraction
         env:
           FITGIRL_URL: ${{ github.event.inputs.fitgirl_url }}
           REQUEST_ID: ${{ github.event.inputs.request_id }}
           SELECTED_INDICES: ${{ github.event.inputs.selected_indices }}
         run: python scripts/extract.py
+
       - name: Commit results to gh-pages
         run: |
           git config user.name "github-actions[bot]"

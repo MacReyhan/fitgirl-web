@@ -1,0 +1,35 @@
+name: Deploy Site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy site/ to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Save site files
+          cp -r site /tmp/site-deploy
+
+          # Switch to gh-pages
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          # Replace index.html (keep results/ folder intact)
+          cp /tmp/site-deploy/* . 2>/dev/null || true
+
+          git add -A
+          git commit -m "deploy: update site from main" --allow-empty
+          git push origin gh-pages
