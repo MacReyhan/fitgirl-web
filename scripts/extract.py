@@ -78,15 +78,31 @@ def extract(ff_links):
                 for _ in range(30):
                     time.sleep(1)
                     try:
-                        m = re.search(r'window\.open\("([^"]+)"\)', driver.page_source)
+                        source = driver.page_source
+                        
+                        # Pattern 1: window.open("...")
+                        m = re.search(r'window\.open\("([^"]+)"\)', source)
                         if m:
-                            e["direct_url"] = m.group(1)
+                            e["direct_url"] = m.group(1).replace("\\/", "/")
+                            e["status"] = "success"
+                            break
+                        
+                        # Pattern 2: direct fuckingfast.co/dl/... link in scripts or DOM (handles escaped slashes)
+                        m2 = re.search(r'https?:\\?/\\?/[^"\'\s>]*fuckingfast\.co\\?/dl[^"\'\s>]+', source)
+                        if m2:
+                            clean_url = m2.group(0).replace("\\/", "/").replace("\\", "")
+                            e["direct_url"] = clean_url
                             e["status"] = "success"
                             break
                     except:
                         pass
                 else:
                     e["status"] = "failed"
+                    source_lower = driver.page_source.lower()
+                    if "cloudflare" in source_lower or "challenge" in source_lower or "turnstile" in source_lower:
+                        print("    [!] Stuck on Cloudflare / Turnstile challenge page.")
+                    else:
+                        print(f"    [!] Failed to extract. Page snippet: {driver.page_source[:500]}...")
 
                 if e["status"] == "success":
                     print(f"    [✓] {e['direct_url'][:80]}...")
