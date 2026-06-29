@@ -1,1087 +1,247 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitGirl Helper — Web Edition</title>
-    <style>
-        /* ── CSS Variables (Fluent-inspired) ──────────────────────────── */
-        :root {
-            --font: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --radius: 8px;
-            --radius-lg: 12px;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
-            --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        [data-theme="dark"] {
-            --bg: #1c1c1c;
-            --bg-card: #2d2d2d;
-            --bg-card-hover: #343434;
-            --bg-input: #3a3a3a;
-            --bg-input-focus: #404040;
-            --border: #404040;
-            --border-focus: #60cdff;
-            --text: #f5f5f5;
-            --text-secondary: #999;
-            --text-muted: #666;
-            --accent: #60cdff;
-            --accent-hover: #7dd7ff;
-            --accent-text: #003d5c;
-            --success: #6ccb5f;
-            --error: #ff6b6b;
-            --warning: #ffd93d;
-            --scrollbar: #555;
-            --scrollbar-hover: #777;
-            --tag-bg: rgba(96, 205, 255, 0.12);
-            --tag-text: #60cdff;
-            --overlay: rgba(0,0,0,0.5);
-        }
-
-        [data-theme="light"] {
-            --bg: #f3f3f3;
-            --bg-card: #ffffff;
-            --bg-card-hover: #fafafa;
-            --bg-input: #f5f5f5;
-            --bg-input-focus: #fff;
-            --border: #e0e0e0;
-            --border-focus: #005fb8;
-            --text: #1a1a1a;
-            --text-secondary: #666;
-            --text-muted: #999;
-            --accent: #005fb8;
-            --accent-hover: #0070d4;
-            --accent-text: #ffffff;
-            --success: #0f7b0f;
-            --error: #c42b1c;
-            --warning: #9d5d00;
-            --scrollbar: #ccc;
-            --scrollbar-hover: #aaa;
-            --tag-bg: rgba(0, 95, 184, 0.08);
-            --tag-text: #005fb8;
-            --overlay: rgba(0,0,0,0.3);
-        }
-
-        /* ── Reset & Base ─────────────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: var(--font);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-            transition: background var(--transition), color var(--transition);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
-
-        /* ── Layout ───────────────────────────────────────────────────── */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 24px 20px 60px;
-        }
-
-        /* ── Header ───────────────────────────────────────────────────── */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 0 24px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent), #a855f7);
-            border-radius: var(--radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-            font-weight: 700;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.3px;
-        }
-
-        .header h1 span {
-            font-weight: 400;
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-left: 8px;
-        }
-
-        /* Theme Toggle */
-        .theme-toggle {
-            width: 44px;
-            height: 26px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 13px;
-            cursor: pointer;
-            position: relative;
-            transition: background var(--transition);
-        }
-
-        .theme-toggle::after {
-            content: '';
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 18px;
-            height: 18px;
-            background: var(--accent);
-            border-radius: 50%;
-            transition: transform var(--transition);
-        }
-
-        [data-theme="light"] .theme-toggle::after {
-            transform: translateX(18px);
-        }
-
-        .theme-toggle:hover { border-color: var(--accent); }
-
-        /* ── Cards ─────────────────────────────────────────────────────── */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-            transition: background var(--transition), border-color var(--transition);
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        /* ── Input Group ──────────────────────────────────────────────── */
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .input-group input {
-            flex: 1;
-            padding: 10px 14px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            color: var(--text);
-            font-size: 14px;
-            font-family: var(--font);
-            outline: none;
-            transition: all var(--transition);
-        }
-
-        .input-group input:focus {
-            background: var(--bg-input-focus);
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 2px rgba(96, 205, 255, 0.15);
-        }
-
-        .input-group input::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 14px;
-            font-weight: 600;
-            font-family: var(--font);
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: var(--accent-text);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(96, 205, 255, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--bg-input);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--bg-card-hover);
-            border-color: var(--accent);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        /* ── Status Bar ───────────────────────────────────────────────── */
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-            transition: all var(--transition);
-        }
-
-        .status-bar.success { border-color: var(--success); color: var(--success); }
-        .status-bar.error { border-color: var(--error); color: var(--error); }
-        .status-bar.processing { border-color: var(--warning); color: var(--warning); }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            flex-shrink: 0;
-        }
-
-        .status-bar.processing .status-dot {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* ── Checklist ────────────────────────────────────────────────── */
-        .checklist {
-            max-height: 250px;
-            overflow-y: auto;
-            margin-bottom: 12px;
-        }
-
-        .check-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: var(--radius);
-            transition: background var(--transition);
-            cursor: pointer;
-        }
-
-        .check-item:hover {
-            background: var(--bg-input);
-        }
-
-        .check-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--accent);
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .check-item label {
-            font-size: 13px;
-            color: var(--text);
-            cursor: pointer;
-            word-break: break-all;
-            flex: 1;
-        }
-
-        .check-item .index-badge {
-            font-size: 11px;
-            color: var(--text-muted);
-            background: var(--bg-input);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .check-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        /* ── Progress ─────────────────────────────────────────────────── */
-        .progress-bar-container {
-            height: 4px;
-            background: var(--bg-input);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), #a855f7);
-            border-radius: 2px;
-            transition: width 0.5s ease;
-            width: 0%;
-        }
-
-        .progress-bar-fill.indeterminate {
-            width: 30%;
-            animation: indeterminate 1.5s ease-in-out infinite;
-        }
-
-        @keyframes indeterminate {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(400%); }
-        }
-
-        /* ── Output Links ─────────────────────────────────────────────── */
-        .output-area {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px;
-            min-height: 120px;
-            max-height: 350px;
-            overflow-y: auto;
-            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-            font-size: 12px;
-            line-height: 1.8;
-            color: var(--text);
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .output-area .link-line {
-            padding: 4px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .output-area .link-line:last-child {
-            border-bottom: none;
-        }
-
-        .output-area .link-line a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        .output-area .link-line a:hover {
-            text-decoration: underline;
-        }
-
-        .output-area .link-line.failed {
-            color: var(--error);
-        }
-
-        .output-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            justify-content: flex-end;
-        }
-
-        /* ── How It Works ─────────────────────────────────────────────── */
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-
-        .step {
-            padding: 14px;
-            background: var(--bg-input);
-            border-radius: var(--radius);
-            text-align: center;
-        }
-
-        .step-number {
-            width: 32px;
-            height: 32px;
-            background: var(--accent);
-            color: var(--accent-text);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .step h3 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .step p {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        /* ── Setup Card ───────────────────────────────────────────────── */
-        .setup-card {
-            border-color: var(--warning);
-        }
-
-        .setup-card .card-title {
-            color: var(--warning);
-        }
-
-        .setup-field {
-            margin-bottom: 12px;
-        }
-
-        .setup-field label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: var(--text-secondary);
-        }
-
-        .setup-field input {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            color: var(--text);
-            font-size: 13px;
-            font-family: 'Cascadia Code', 'Consolas', monospace;
-            outline: none;
-            transition: all var(--transition);
-        }
-
-        .setup-field input:focus {
-            border-color: var(--border-focus);
-        }
-
-        .setup-note {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .setup-save-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-        }
-
-        .saved-indicator {
-            font-size: 12px;
-            color: var(--success);
-            opacity: 0;
-            transition: opacity var(--transition);
-        }
-
-        .saved-indicator.show { opacity: 1; }
-
-        /* ── Toast ─────────────────────────────────────────────────────── */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 12px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            font-size: 13px;
-            color: var(--text);
-            z-index: 1000;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 300ms ease;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success { border-color: var(--success); }
-        .toast.error { border-color: var(--error); }
-
-        /* ── Hidden ────────────────────────────────────────────────────── */
-        .hidden { display: none !important; }
-
-        /* ── Footer ────────────────────────────────────────────────────── */
-        .footer {
-            text-align: center;
-            padding: 24px 0 0;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .footer a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        .footer a:hover { text-decoration: underline; }
-
-        /* ── Responsive ────────────────────────────────────────────────── */
-        @media (max-width: 600px) {
-            .container { padding: 16px 12px 40px; }
-            .input-group { flex-direction: column; }
-            .header h1 span { display: block; margin-left: 0; margin-top: 2px; }
-            .steps { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitGirl Helper</title>
+<style>
+:root{--font:'Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif;--r:8px;--rl:12px;--t:180ms cubic-bezier(.4,0,.2,1)}
+[data-theme="dark"]{--bg:#1a1a2e;--bg2:#16213e;--card:#1e293b;--card2:#253347;--input:#2a3a50;--inputf:#334766;--bdr:#334155;--bdrf:#60a5fa;--tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;--acc:#60a5fa;--acc2:#93c5fd;--acctx:#0c1524;--ok:#4ade80;--err:#f87171;--warn:#fbbf24;--sb:#475569;--glow:0 0 20px rgba(96,165,250,.15)}
+[data-theme="light"]{--bg:#f0f4f8;--bg2:#e2e8f0;--card:#fff;--card2:#f8fafc;--input:#f1f5f9;--inputf:#fff;--bdr:#e2e8f0;--bdrf:#3b82f6;--tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;--acc:#3b82f6;--acc2:#2563eb;--acctx:#fff;--ok:#16a34a;--err:#dc2626;--warn:#d97706;--sb:#cbd5e1;--glow:0 0 20px rgba(59,130,246,.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;transition:background var(--t),color var(--t)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--sb);border-radius:3px}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 0 20px}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;background:linear-gradient(135deg,var(--acc),#a855f7);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800}
+.hdr h1{font-size:18px;font-weight:600;letter-spacing:-.3px}
+.hdr h1 span{font-weight:400;color:var(--tx2);font-size:13px;margin-left:6px}
+.thm{width:40px;height:24px;background:var(--input);border:1px solid var(--bdr);border-radius:12px;cursor:pointer;position:relative;transition:all var(--t);flex-shrink:0}
+.thm::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:var(--acc);border-radius:50%;transition:transform var(--t)}
+[data-theme="light"] .thm::after{transform:translateX(16px)}
+.thm:hover{border-color:var(--acc)}
+.c{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:var(--glow);transition:all var(--t)}
+.c:hover{border-color:color-mix(in srgb,var(--acc) 30%,var(--bdr))}
+.ct{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ig{display:flex;gap:8px}
+.ig input{flex:1;padding:10px 14px;background:var(--input);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-size:14px;font-family:var(--font);outline:none;transition:all var(--t)}
+.ig input:focus{background:var(--inputf);border-color:var(--bdrf);box-shadow:0 0 0 3px rgba(96,165,250,.12)}
+.ig input::placeholder{color:var(--tx3)}
+.b{padding:10px 18px;border:none;border-radius:var(--r);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all var(--t);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.bp{background:var(--acc);color:var(--acctx)}
+.bp:hover:not(:disabled){background:var(--acc2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(96,165,250,.25)}
+.bs{background:var(--input);color:var(--tx);border:1px solid var(--bdr)}
+.bs:hover:not(:disabled){border-color:var(--acc);background:var(--card2)}
+.b:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.bsm{padding:6px 12px;font-size:11px}
+.st{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;color:var(--tx2);margin-bottom:14px;transition:all var(--t)}
+.st.ok{border-color:var(--ok);color:var(--ok)}.st.er{border-color:var(--err);color:var(--err)}.st.pr{border-color:var(--warn);color:var(--warn)}
+.sd{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.st.pr .sd{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.cl{max-height:260px;overflow-y:auto;margin-bottom:10px}
+.ci{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--r);transition:background var(--t);cursor:pointer}
+.ci:hover{background:var(--input)}
+.ci input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc);cursor:pointer;flex-shrink:0}
+.ci label{font-size:12px;color:var(--tx);cursor:pointer;word-break:break-all;flex:1;font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+.ci .ib{font-size:10px;color:var(--tx3);background:var(--input);padding:2px 6px;border-radius:4px;font-weight:700;flex-shrink:0}
+.ca{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pc{height:3px;background:var(--input);border-radius:2px;overflow:hidden;margin-bottom:14px}
+.pf{height:100%;background:linear-gradient(90deg,var(--acc),#a855f7);border-radius:2px;transition:width .4s ease;width:0%}
+.pf.ind{width:28%;animation:ind 1.4s ease-in-out infinite}
+@keyframes ind{0%{transform:translateX(-100%)}100%{transform:translateX(450%)}}
+.oa{background:var(--input);border:1px solid var(--bdr);border-radius:var(--r);padding:12px;min-height:100px;max-height:320px;overflow-y:auto;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:11.5px;line-height:1.9;color:var(--tx);word-break:break-all}
+.oa .ll{padding:3px 0;border-bottom:1px solid var(--bdr)}.oa .ll:last-child{border:0}
+.oa .ll a{color:var(--acc);text-decoration:none}.oa .ll a:hover{text-decoration:underline}
+.oa .ll.fl{color:var(--err)}
+.oact{display:flex;gap:6px;margin-top:10px;justify-content:flex-end}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}
+.stp{padding:14px;background:var(--input);border-radius:var(--r);text-align:center}
+.sn{width:28px;height:28px;background:var(--acc);color:var(--acctx);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:6px}
+.stp h3{font-size:13px;font-weight:600;margin-bottom:2px}
+.stp p{font-size:11px;color:var(--tx2)}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.2);font-size:13px;color:var(--tx);z-index:999;transform:translateY(80px);opacity:0;transition:all 280ms ease;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--ok)}.toast.er{border-color:var(--err)}
+.footer{text-align:center;padding:20px 0 0;font-size:11px;color:var(--tx3)}
+.footer a{color:var(--acc);text-decoration:none}.footer a:hover{text-decoration:underline}
+.hide{display:none!important}
+@media(max-width:560px){.ig{flex-direction:column}.hdr h1 span{display:block;margin-left:0;margin-top:2px}.steps{grid-template-columns:1fr}.ca{justify-content:center}}
+</style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="container">
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <div class="logo">F</div>
-            <h1>FitGirl Helper <span>Web Edition</span></h1>
-        </div>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light theme"></button>
-    </div>
-
-    <!-- Setup Card (GitHub API credentials) -->
-    <div class="card setup-card" id="setupCard">
-        <div class="card-title">⚙️ GitHub API Setup (Required)</div>
-        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
-            This app triggers GitHub Actions workflows to extract links. You need to provide your GitHub details.
-            Credentials are stored <strong>locally in your browser only</strong> — never sent anywhere except GitHub's API.
-        </p>
-        <div class="setup-field">
-            <label>GitHub Personal Access Token (PAT)</label>
-            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-            <p class="setup-note">
-                Create one at <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">GitHub Settings → Tokens</a>.
-                Needs <code>repo</code> and <code>workflow</code> scopes.
-            </p>
-        </div>
-        <div class="setup-field">
-            <label>Repository Owner</label>
-            <input type="text" id="ghOwner" placeholder="MacReyhan">
-        </div>
-        <div class="setup-field">
-            <label>Repository Name</label>
-            <input type="text" id="ghRepo" placeholder="fitgirl_helper_redesigned">
-        </div>
-        <div class="setup-save-row">
-            <button class="btn btn-primary btn-sm" onclick="saveSetup()">💾 Save Settings</button>
-            <span class="saved-indicator" id="savedIndicator">✓ Saved</span>
-        </div>
-    </div>
-
-    <!-- URL Input -->
-    <div class="card">
-        <div class="card-title">🔗 FitGirl Repack URL</div>
-        <div class="input-group">
-            <input type="url" id="urlInput" placeholder="https://fitgirl-repacks.site/game-name/" value="">
-            <button class="btn btn-primary" id="fetchBtn" onclick="fetchLinks()">
-                🔍 Fetch Links
-            </button>
-        </div>
-    </div>
-
-    <!-- Status -->
-    <div class="status-bar" id="statusBar">
-        <div class="status-dot"></div>
-        <span id="statusText">Ready — paste a FitGirl repack URL and click Fetch</span>
-    </div>
-
-    <!-- Progress -->
-    <div class="progress-bar-container" id="progressContainer">
-        <div class="progress-bar-fill" id="progressFill"></div>
-    </div>
-
-    <!-- Parts Checklist -->
-    <div class="card hidden" id="checklistCard">
-        <div class="card-title">📦 Found Parts</div>
-        <div id="gameTitle" style="font-size: 16px; font-weight: 600; margin-bottom: 8px;"></div>
-        <div class="checklist" id="checklist"></div>
-        <div class="check-actions">
-            <button class="btn btn-secondary btn-sm" onclick="selectAll(true)">✅ Select All</button>
-            <button class="btn btn-secondary btn-sm" onclick="selectAll(false)">⬜ Deselect All</button>
-            <div style="flex:1"></div>
-            <button class="btn btn-primary" id="extractBtn" onclick="extractLinks()">
-                🚀 Extract Direct Links
-            </button>
-        </div>
-    </div>
-
-    <!-- Output -->
-    <div class="card hidden" id="outputCard">
-        <div class="card-title">📋 Extracted Direct Links</div>
-        <div class="output-area" id="outputArea"></div>
-        <div class="output-actions">
-            <button class="btn btn-secondary btn-sm" onclick="clearOutput()">🗑️ Clear</button>
-            <button class="btn btn-primary btn-sm" onclick="copyLinks()">📋 Copy All Links</button>
-        </div>
-    </div>
-
-    <!-- How It Works -->
-    <div class="card">
-        <div class="card-title">ℹ️ How It Works</div>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Paste URL</h3>
-                <p>Enter any FitGirl repack page URL</p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Fetch & Select</h3>
-                <p>Links are scraped; pick what you want</p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Extract</h3>
-                <p>GitHub Actions runs Chrome to bypass Cloudflare & get direct links</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        FitGirl Helper Web Edition — powered by
-        <a href="https://github.com/features/actions" target="_blank">GitHub Actions</a>
-        &nbsp;·&nbsp;
-        <a href="https://github.com/MacReyhan/fitgirl_helper_redesigned" target="_blank">Source Code</a>
-    </div>
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">F</div>
+    <h1>FitGirl Helper <span>Web</span></h1>
+  </div>
+  <button class="thm" onclick="toggleTheme()" title="Toggle theme"></button>
 </div>
 
-<!-- Toast Notification -->
+<div class="c">
+  <div class="ct">🔗 Repack URL</div>
+  <div class="ig">
+    <input type="url" id="urlInput" placeholder="https://fitgirl-repacks.site/game-name/">
+    <button class="b bp" id="fetchBtn" onclick="doFetch()">🔍 Fetch</button>
+  </div>
+</div>
+
+<div class="st" id="statusBar">
+  <div class="sd"></div>
+  <span id="statusText">Paste a FitGirl URL and click Fetch</span>
+</div>
+
+<div class="pc"><div class="pf" id="pf"></div></div>
+
+<div class="c hide" id="clCard">
+  <div class="ct">📦 Found Parts</div>
+  <div id="gameTitle" style="font-size:15px;font-weight:600;margin-bottom:8px"></div>
+  <div class="cl" id="cl"></div>
+  <div class="ca">
+    <button class="b bs bsm" onclick="selAll(true)">✅ All</button>
+    <button class="b bs bsm" onclick="selAll(false)">⬜ None</button>
+    <div style="flex:1"></div>
+    <button class="b bp" id="exBtn" onclick="doExtract()">🚀 Extract Direct Links</button>
+  </div>
+</div>
+
+<div class="c hide" id="outCard">
+  <div class="ct">📋 Direct Download Links</div>
+  <div class="oa" id="outArea"></div>
+  <div class="oact">
+    <button class="b bs bsm" onclick="clrOut()">🗑️ Clear</button>
+    <button class="b bp bsm" onclick="copyLinks()">📋 Copy All</button>
+  </div>
+</div>
+
+<div class="c">
+  <div class="ct">ℹ️ How It Works</div>
+  <div class="steps">
+    <div class="stp"><div class="sn">1</div><h3>Paste URL</h3><p>Any FitGirl repack page</p></div>
+    <div class="stp"><div class="sn">2</div><h3>Select Parts</h3><p>Pick the files you want</p></div>
+    <div class="stp"><div class="sn">3</div><h3>Extract</h3><p>Server-side Chrome bypasses Cloudflare</p></div>
+  </div>
+</div>
+
+<div class="footer">
+  FitGirl Helper Web &mdash; Powered by Cloudflare Workers &amp; GitHub Actions
+</div>
+
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State ────────────────────────────────────────────────────────────────
-let config = {
-    token: '',
-    owner: '',
-    repo: '',
-};
-let foundLinks = [];
-let currentRequestId = null;
-let pollTimer = null;
+/*──────────────────────────────────────────────────
+  ⚡ CONFIGURATION — Set your Cloudflare Worker URL
+  This is the ONLY thing you change in this file.
+──────────────────────────────────────────────────*/
+const API_URL = 'https://fitgirl-helper-api.sayan-reyhan99.workers.dev';
 
-// ── Init ─────────────────────────────────────────────────────────────────
-(function init() {
-    // Load saved config
-    try {
-        const saved = JSON.parse(localStorage.getItem('fgh_config') || '{}');
-        if (saved.token) config.token = saved.token;
-        if (saved.owner) config.owner = saved.owner;
-        if (saved.repo) config.repo = saved.repo;
-        document.getElementById('ghToken').value = config.token;
-        document.getElementById('ghOwner').value = config.owner;
-        document.getElementById('ghRepo').value = config.repo;
-    } catch(e) {}
+let links=[],reqId=null,poll=null;
 
-    // Load theme
-    const savedTheme = localStorage.getItem('fgh_theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+(function(){
+  document.documentElement.setAttribute('data-theme', localStorage.getItem('fgh_t')||'dark');
 })();
 
-// ── Theme ────────────────────────────────────────────────────────────────
-function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', next);
-    localStorage.setItem('fgh_theme', next);
+function toggleTheme(){const h=document.documentElement,n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('fgh_t',n)}
+function $(id){return document.getElementById(id)}
+function status(t,c=''){$('statusBar').className='st '+c;$('statusText').textContent=t}
+function prog(p,ind=false){const f=$('pf');if(ind){f.classList.add('ind');f.style.width='28%'}else{f.classList.remove('ind');f.style.width=p+'%'}}
+function toast(m,t=''){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function gid(){return 'r_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
+
+async function api(path,method='GET',body=null){
+  const o={method,headers:{'Content-Type':'application/json'}};
+  if(body) o.body=JSON.stringify(body);
+  const r=await fetch(API_URL+path,o);
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error||'API error '+r.status);
+  return d;
 }
 
-// ── Setup ────────────────────────────────────────────────────────────────
-function saveSetup() {
-    config.token = document.getElementById('ghToken').value.trim();
-    config.owner = document.getElementById('ghOwner').value.trim();
-    config.repo = document.getElementById('ghRepo').value.trim();
-
-    localStorage.setItem('fgh_config', JSON.stringify(config));
-
-    const indicator = document.getElementById('savedIndicator');
-    indicator.classList.add('show');
-    setTimeout(() => indicator.classList.remove('show'), 2000);
-    showToast('Settings saved!', 'success');
-}
-
-function getConfig() {
-    // Re-read from fields in case user edited without saving
-    return {
-        token: document.getElementById('ghToken').value.trim() || config.token,
-        owner: document.getElementById('ghOwner').value.trim() || config.owner,
-        repo: document.getElementById('ghRepo').value.trim() || config.repo,
-    };
-}
-
-function validateConfig() {
-    const c = getConfig();
-    if (!c.token || !c.owner || !c.repo) {
-        showToast('Please fill in GitHub API settings first!', 'error');
-        document.getElementById('setupCard').scrollIntoView({ behavior: 'smooth' });
-        return false;
-    }
-    return true;
-}
-
-// ── GitHub API ───────────────────────────────────────────────────────────
-async function ghAPI(endpoint, method = 'GET', body = null) {
-    const c = getConfig();
-    const url = `https://api.github.com/repos/${c.owner}/${c.repo}${endpoint}`;
-    const headers = {
-        'Authorization': `Bearer ${c.token}`,
-        'Accept': 'application/vnd.github.v3+json',
-    };
-    if (body) headers['Content-Type'] = 'application/json';
-
-    const resp = await fetch(url, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : null,
+async function doFetch(){
+  const url=$('urlInput').value.trim();
+  if(!url){toast('Enter a URL first','er');return}
+  if(API_URL.includes('%%')){toast('Worker URL not configured!','er');return}
+  $('fetchBtn').disabled=true;
+  $('clCard').classList.add('hide');$('outCard').classList.add('hide');
+  links=[];status('Fetching links...','pr');prog(0,true);
+  try{
+    const d=await api('/fetch','POST',{url});
+    links=d.links||[];
+    if(!links.length){status('No FuckingFast links found','er');toast('No links found','er');$('fetchBtn').disabled=false;prog(0);return}
+    $('gameTitle').textContent=d.game_title||'';
+    const cl=$('cl');cl.innerHTML='';
+    links.forEach((lk,i)=>{
+      const div=document.createElement('div');div.className='ci';
+      div.innerHTML=`<span class="ib">${i+1}</span><input type="checkbox" id="lk${i}" checked><label for="lk${i}">${esc(lk.filename)}</label>`;
+      cl.appendChild(div);
     });
-
-    if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.message || `GitHub API error: ${resp.status}`);
-    }
-
-    // 204 No Content
-    if (resp.status === 204) return null;
-    return resp.json();
+    $('clCard').classList.remove('hide');$('exBtn').disabled=false;
+    status(`Found ${links.length} links — select and extract!`,'ok');toast(`${links.length} links found!`,'ok');prog(100);
+  }catch(e){status('Error: '+e.message,'er');toast(e.message,'er');prog(0)}
+  $('fetchBtn').disabled=false;
 }
 
-// ── Status Helpers ───────────────────────────────────────────────────────
-function setStatus(text, type = '') {
-    const bar = document.getElementById('statusBar');
-    bar.className = 'status-bar ' + type;
-    document.getElementById('statusText').textContent = text;
+async function doExtract(){
+  if(API_URL.includes('%%')){toast('Worker URL not configured!','er');return}
+  const sel=[];document.querySelectorAll('#cl input[type=checkbox]').forEach((cb,i)=>{if(cb.checked)sel.push(i)});
+  if(!sel.length){toast('Select at least one link','er');return}
+  $('exBtn').disabled=true;$('fetchBtn').disabled=true;
+  status('Triggering extraction...','pr');prog(0,true);
+  reqId=gid();
+  try{
+    await api('/extract','POST',{url:$('urlInput').value.trim(),request_id:reqId,selected_indices:sel.join(',')});
+    status('Extraction started — Chrome running on server...','pr');
+    toast('Workflow triggered! Please wait ~2-5 min','ok');
+    pollResults(reqId);
+  }catch(e){status('Error: '+e.message,'er');toast(e.message,'er');$('exBtn').disabled=false;$('fetchBtn').disabled=false;prog(0)}
 }
 
-function setProgress(pct, indeterminate = false) {
-    const fill = document.getElementById('progressFill');
-    if (indeterminate) {
-        fill.classList.add('indeterminate');
-        fill.style.width = '30%';
-    } else {
-        fill.classList.remove('indeterminate');
-        fill.style.width = pct + '%';
-    }
+function pollResults(id){
+  if(poll)clearInterval(poll);
+  let n=0;const max=120;
+  poll=setInterval(async()=>{
+    n++;
+    if(n>max){clearInterval(poll);status('Timed out. Check GitHub Actions.','er');$('exBtn').disabled=false;$('fetchBtn').disabled=false;prog(0);return}
+    try{
+      const d=await api('/status/'+id);
+      if(d.status==='ready'&&d.data){clearInterval(poll);showResults(d.data);return}
+      status(`Waiting... ${d.workflow_status||'pending'} (${n*5}s elapsed)`,'pr');
+    }catch(e){status(`Polling... (${n*5}s)`,'pr')}
+  },5000);
 }
 
-function showToast(msg, type = '') {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.className = 'toast ' + type + ' show';
-    setTimeout(() => toast.classList.remove('show'), 3000);
+function showResults(data){
+  prog(100);$('exBtn').disabled=false;$('fetchBtn').disabled=false;
+  if(data.status==='error'){status('Error: '+(data.error||'Unknown'),'er');toast(data.error||'Failed','er');return}
+  const out=$('outArea');out.innerHTML='';
+  (data.direct_links||[]).forEach(e=>{
+    const div=document.createElement('div');
+    div.className='ll'+(e.status!=='success'?' fl':'');
+    if(e.status==='success'&&e.direct_url) div.innerHTML=`<a href="${esc(e.direct_url)}" target="_blank">${esc(e.direct_url)}</a>`;
+    else div.textContent='✗ FAILED: '+e.filename;
+    out.appendChild(div);
+  });
+  $('outCard').classList.remove('hide');
+  const s=data.summary||{};
+  status(`Done! ${s.success||0}/${s.total||0} links extracted`,'ok');toast('Extraction complete!','ok');
 }
 
-function generateId() {
-    return 'req_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
-}
-
-// ── Fetch Links (Step 1) ─────────────────────────────────────────────────
-async function fetchLinks() {
-    const url = document.getElementById('urlInput').value.trim();
-    if (!url) {
-        showToast('Please enter a FitGirl repack URL', 'error');
-        return;
-    }
-    if (!validateConfig()) return;
-
-    const fetchBtn = document.getElementById('fetchBtn');
-    fetchBtn.disabled = true;
-    setStatus('Triggering fetch workflow...', 'processing');
-    setProgress(0, true);
-
-    // Hide previous results
-    document.getElementById('checklistCard').classList.add('hidden');
-    document.getElementById('outputCard').classList.add('hidden');
-    foundLinks = [];
-
-    currentRequestId = generateId();
-
-    try {
-        // Trigger the fetch-only workflow
-        await ghAPI('/actions/workflows/fetch-links.yml/dispatches', 'POST', {
-            ref: 'main',
-            inputs: {
-                fitgirl_url: url,
-                request_id: currentRequestId,
-            }
-        });
-
-        setStatus('Workflow triggered! Waiting for results...', 'processing');
-        showToast('Fetch workflow started — please wait ~1-2 minutes', 'success');
-
-        // Poll for results
-        pollForResults(currentRequestId, 'fetch');
-
-    } catch (e) {
-        setStatus('Error: ' + e.message, 'error');
-        showToast(e.message, 'error');
-        fetchBtn.disabled = false;
-        setProgress(0);
-    }
-}
-
-// ── Extract Links (Step 2) ───────────────────────────────────────────────
-async function extractLinks() {
-    if (!validateConfig()) return;
-
-    const selected = [];
-    const checkboxes = document.querySelectorAll('#checklist input[type="checkbox"]');
-    checkboxes.forEach((cb, i) => {
-        if (cb.checked) selected.push(i);
-    });
-
-    if (selected.length === 0) {
-        showToast('No links selected!', 'error');
-        return;
-    }
-
-    const extractBtn = document.getElementById('extractBtn');
-    extractBtn.disabled = true;
-    document.getElementById('fetchBtn').disabled = true;
-    setStatus('Triggering extraction workflow...', 'processing');
-    setProgress(0, true);
-
-    currentRequestId = generateId();
-    const url = document.getElementById('urlInput').value.trim();
-
-    try {
-        await ghAPI('/actions/workflows/extract-links.yml/dispatches', 'POST', {
-            ref: 'main',
-            inputs: {
-                fitgirl_url: url,
-                request_id: currentRequestId,
-                selected_indices: selected.join(','),
-            }
-        });
-
-        setStatus('Extraction workflow triggered! This may take a few minutes...', 'processing');
-        showToast('Extraction started — Chrome will bypass Cloudflare on GitHub\'s servers', 'success');
-
-        pollForResults(currentRequestId, 'extract');
-
-    } catch (e) {
-        setStatus('Error: ' + e.message, 'error');
-        showToast(e.message, 'error');
-        extractBtn.disabled = false;
-        document.getElementById('fetchBtn').disabled = false;
-        setProgress(0);
-    }
-}
-
-// ── Poll for Results ─────────────────────────────────────────────────────
-function pollForResults(requestId, type) {
-    if (pollTimer) clearInterval(pollTimer);
-
-    let attempts = 0;
-    const maxAttempts = type === 'fetch' ? 40 : 120; // ~2 min for fetch, ~10 min for extract
-    const interval = 5000; // 5 seconds
-
-    pollTimer = setInterval(async () => {
-        attempts++;
-
-        if (attempts > maxAttempts) {
-            clearInterval(pollTimer);
-            setStatus('Timed out waiting for results. Check the Actions tab on GitHub.', 'error');
-            document.getElementById('fetchBtn').disabled = false;
-            document.getElementById('extractBtn').disabled = false;
-            setProgress(0);
-            return;
-        }
-
-        try {
-            // Try to fetch the result JSON from gh-pages
-            const c = getConfig();
-            const resultUrl = `https://${c.owner}.github.io/${c.repo}/results/${requestId}.json?t=${Date.now()}`;
-            const resp = await fetch(resultUrl);
-
-            if (resp.ok) {
-                const data = await resp.json();
-
-                if (data.status === 'completed' || data.status === 'error') {
-                    clearInterval(pollTimer);
-                    handleResults(data, type);
-                    return;
-                }
-            }
-        } catch (e) {
-            // Result not ready yet, keep polling
-        }
-
-        // Also check workflow run status
-        try {
-            const runs = await ghAPI('/actions/runs?per_page=5');
-            const latestRun = runs.workflow_runs.find(r =>
-                r.status !== 'completed' && r.name.includes(type === 'fetch' ? 'Fetch' : 'Extract')
-            );
-
-            if (latestRun) {
-                setStatus(`Workflow ${latestRun.status}... (attempt ${attempts}/${maxAttempts})`, 'processing');
-            }
-        } catch(e) {}
-
-        setStatus(`Waiting for results... (${attempts * 5}s elapsed)`, 'processing');
-
-    }, interval);
-}
-
-// ── Handle Results ───────────────────────────────────────────────────────
-function handleResults(data, type) {
-    setProgress(100);
-    document.getElementById('fetchBtn').disabled = false;
-
-    if (data.status === 'error') {
-        setStatus('Error: ' + (data.error || 'Unknown error'), 'error');
-        showToast(data.error || 'Extraction failed', 'error');
-        return;
-    }
-
-    if (type === 'fetch') {
-        // Show checklist
-        foundLinks = data.links || [];
-
-        if (data.game_title) {
-            document.getElementById('gameTitle').textContent = data.game_title;
-        }
-
-        const checklist = document.getElementById('checklist');
-        checklist.innerHTML = '';
-
-        foundLinks.forEach((link, i) => {
-            const filename = link.filename || link.url.split('/').pop();
-            const div = document.createElement('div');
-            div.className = 'check-item';
-            div.innerHTML = `
-                <span class="index-badge">#${i + 1}</span>
-                <input type="checkbox" id="link_${i}" checked>
-                <label for="link_${i}">${escapeHtml(filename)}</label>
-            `;
-            checklist.appendChild(div);
-        });
-
-        document.getElementById('checklistCard').classList.remove('hidden');
-        document.getElementById('extractBtn').disabled = false;
-        setStatus(`Found ${foundLinks.length} FuckingFast links — select and extract!`, 'success');
-        showToast(`Found ${foundLinks.length} links!`, 'success');
-
-    } else {
-        // Show extracted direct links
-        const outputArea = document.getElementById('outputArea');
-        outputArea.innerHTML = '';
-
-        const directLinks = data.direct_links || [];
-        directLinks.forEach(entry => {
-            const div = document.createElement('div');
-            div.className = 'link-line' + (entry.status !== 'success' ? ' failed' : '');
-
-            if (entry.status === 'success' && entry.direct_url) {
-                div.innerHTML = `<a href="${escapeHtml(entry.direct_url)}" target="_blank">${escapeHtml(entry.direct_url)}</a>`;
-            } else {
-                div.textContent = `# FAILED: ${entry.filename} (${entry.status})`;
-            }
-            outputArea.appendChild(div);
-        });
-
-        document.getElementById('outputCard').classList.remove('hidden');
-        document.getElementById('extractBtn').disabled = false;
-
-        const summary = data.summary || {};
-        setStatus(`Done! ${summary.success || 0}/${summary.total || 0} links extracted successfully.`, 'success');
-        showToast('Extraction complete!', 'success');
-    }
-}
-
-// ── Checklist Helpers ────────────────────────────────────────────────────
-function selectAll(checked) {
-    document.querySelectorAll('#checklist input[type="checkbox"]').forEach(cb => {
-        cb.checked = checked;
-    });
-}
-
-// ── Output Helpers ───────────────────────────────────────────────────────
-function clearOutput() {
-    document.getElementById('outputArea').innerHTML = '';
-    setProgress(0);
-}
-
-function copyLinks() {
-    const links = [];
-    document.querySelectorAll('#outputArea .link-line a').forEach(a => {
-        links.push(a.href);
-    });
-
-    if (links.length === 0) {
-        showToast('No links to copy!', 'error');
-        return;
-    }
-
-    navigator.clipboard.writeText(links.join('\n')).then(() => {
-        showToast(`${links.length} links copied to clipboard!`, 'success');
-    }).catch(() => {
-        // Fallback
-        const ta = document.createElement('textarea');
-        ta.value = links.join('\n');
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast(`${links.length} links copied!`, 'success');
-    });
-}
-
-// ── Utilities ────────────────────────────────────────────────────────────
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+function selAll(v){document.querySelectorAll('#cl input[type=checkbox]').forEach(c=>c.checked=v)}
+function clrOut(){$('outArea').innerHTML='';prog(0)}
+function copyLinks(){
+  const a=[...document.querySelectorAll('#outArea .ll a')].map(l=>l.href);
+  if(!a.length){toast('Nothing to copy','er');return}
+  navigator.clipboard.writeText(a.join('\n')).then(()=>toast(a.length+' links copied!','ok')).catch(()=>{
+    const t=document.createElement('textarea');t.value=a.join('\n');document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast(a.length+' links copied!','ok');
+  });
 }
 </script>
-
 </body>
 </html>
