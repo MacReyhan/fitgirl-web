@@ -19,7 +19,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
 
 jobs:
   extract:
@@ -36,32 +35,45 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install requests beautifulsoup4 selenium undetected-chromedriver
+        run: pip install requests beautifulsoup4 selenium undetected-chromedriver
 
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: 'stable'
 
-      - name: Run extraction script
+      - name: Run extraction
         env:
           FITGIRL_URL: ${{ github.event.inputs.fitgirl_url }}
           REQUEST_ID: ${{ github.event.inputs.request_id }}
           SELECTED_INDICES: ${{ github.event.inputs.selected_indices }}
         run: python scripts/extract.py
 
-      - name: Upload results artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: extraction-results-${{ github.event.inputs.request_id }}
-          path: output/
-          retention-days: 7
+      - name: Commit results to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy results to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./publish
-          keep_files: true
-          destination_dir: .
+          # Save result file path
+          RESULT_FILE="results/${{ github.event.inputs.request_id }}.json"
+
+          # Stash the result file
+          cp "$RESULT_FILE" /tmp/result.json
+
+          # Switch to gh-pages (create if doesn't exist)
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . 2>/dev/null || true
+          fi
+
+          # Place the result
+          mkdir -p results
+          cp /tmp/result.json "$RESULT_FILE"
+
+          # Commit and push
+          git add results/
+          git commit -m "result: ${{ github.event.inputs.request_id }}" --allow-empty
+          git push origin gh-pages

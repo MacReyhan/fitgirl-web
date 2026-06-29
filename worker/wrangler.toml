@@ -1,0 +1,10 @@
+name = "fitgirl-helper-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Set these in the Cloudflare dashboard under Workers → Settings → Variables
+# Or use: wrangler secret put GITHUB_TOKEN
+# [vars]
+# GITHUB_OWNER = "MacReyhan"
+# GITHUB_REPO = "fitgirl_helper_web"
+# API_SECRET = ""   # optional, leave empty to disable

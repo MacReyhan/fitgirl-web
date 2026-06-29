@@ -1,140 +1,178 @@
 # FitGirl Helper — Web Edition 🌐
 
-![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
-![GitHub Actions](https://img.shields.io/badge/backend-GitHub%20Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white)
-![GitHub Pages](https://img.shields.io/badge/frontend-GitHub%20Pages-222?style=flat-square&logo=github&logoColor=white)
+A **serverless web version** of FitGirl Helper. No desktop app, no installs. Everything runs on **Cloudflare Workers** + **GitHub Actions**.
 
-A **serverless web version** of [FitGirl Helper Redesigned](https://github.com/MacReyhan/fitgirl_helper_redesigned) — no desktop app needed! Runs entirely on GitHub Actions + GitHub Pages.
-
----
-
-## ✨ Features
-
-- 🌐 **Web-Based UI** — Fluent Design-inspired interface accessible from any browser
-- 🤖 **GitHub Actions Backend** — Selenium/Chrome runs on GitHub's servers, not your machine
-- 🔒 **Client-Side Credentials** — GitHub PAT stored locally in your browser only
-- 🌙 **Dark/Light Theme** — Toggle between themes with one click
-- ☑️ **Selective Extraction** — Pick only the files you need
-- 📋 **One-Click Copy** — Copy all extracted links to clipboard
-- 📱 **Responsive** — Works on mobile, tablet, and desktop
-
----
-
-## 🚀 Quick Start
-
-### 1. Fork this Repository
-
-Click the **Fork** button at the top of this page.
-
-### 2. Enable GitHub Pages
-
-1. Go to your fork's **Settings → Pages**
-2. Set Source to **GitHub Actions** (or deploy from `gh-pages` branch)
-3. The site will be available at `https://<your-username>.github.io/<repo-name>/`
-
-### 3. Create a Personal Access Token (PAT)
-
-1. Go to [GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
-2. Click **"Generate new token (classic)"**
-3. Give it a name like `fitgirl-helper-web`
-4. Select scopes: **`repo`** and **`workflow`**
-5. Generate and copy the token
-
-### 4. Use the Website
-
-1. Open your GitHub Pages URL
-2. Paste your PAT, username, and repo name in the setup section
-3. Enter a FitGirl repack URL
-4. Click **Fetch Links** → select what you want → click **Extract Direct Links**
-5. Wait ~2-5 minutes for GitHub Actions to finish
-6. Copy your direct download links!
+Users see a clean website — **zero configuration needed** on their end. All secrets stay on the server.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────┐
-│   GitHub Pages (Frontend)   │
-│   • Static HTML/CSS/JS      │
-│   • Fluent Design UI        │
-│   • GitHub API calls         │
-└──────────┬──────────────────┘
-           │ workflow_dispatch
-           ▼
-┌─────────────────────────────┐
-│   GitHub Actions (Backend)  │
-│   • Ubuntu runner           │
-│   • Python + Chrome         │
-│   • undetected-chromedriver │
-│   • Cloudflare bypass       │
-└──────────┬──────────────────┘
-           │ results JSON → gh-pages
-           ▼
-┌─────────────────────────────┐
-│   GitHub Pages (Results)    │
-│   • /results/{id}.json      │
-│   • Polled by frontend      │
-└─────────────────────────────┘
+User's Browser              Cloudflare Worker              GitHub Actions
+┌──────────┐   /fetch    ┌────────────────────┐
+│  Website  │───────────▶│  Scrapes FitGirl   │  (instant, ~1s)
+│           │◀───────────│  Returns links     │
+│           │            └────────────────────┘
+│           │   /extract ┌────────────────────┐  workflow_dispatch  ┌─────────────┐
+│           │───────────▶│  Triggers GitHub   │───────────────────▶│ Chrome runs  │
+│           │            │  Actions workflow  │                    │ Bypasses CF  │
+│           │            └────────────────────┘                    │ Saves result │
+│           │   /status  ┌────────────────────┐  reads gh-pages    └──────┬──────┘
+│           │───────────▶│  Checks for result │◀──────────────────────────┘
+│           │◀───────────│  Returns links     │
+└──────────┘            └────────────────────┘
 ```
-
-### Workflows
-
-| Workflow | File | Purpose |
-|----------|------|---------|
-| **Fetch Links** | `fetch-links.yml` | Quick scan: scrapes page for FuckingFast URLs (~1 min) |
-| **Extract Links** | `extract-links.yml` | Full extraction: Chrome bypasses Cloudflare (~3-10 min) |
-| **Deploy Site** | `deploy-site.yml` | Publishes `docs/` to GitHub Pages |
 
 ---
 
-## 📁 Project Structure
+## 🚀 Setup (One-Time, ~10 minutes)
+
+### Step 1 — Fork/Clone this repo
+
+```bash
+git clone https://github.com/YOUR_USERNAME/fitgirl_helper_web.git
+cd fitgirl_helper_web
+```
+
+Push it to your own GitHub repository.
+
+### Step 2 — Create a GitHub Personal Access Token
+
+1. Go to **[github.com/settings/tokens](https://github.com/settings/tokens)**
+2. **Generate new token (classic)**
+3. Name: `fitgirl-worker`
+4. Scopes: ✅ `repo`, ✅ `workflow`
+5. Copy the token (starts with `ghp_...`)
+
+### Step 3 — Deploy the Cloudflare Worker
+
+**Option A: Cloudflare Dashboard (easiest)**
+
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create**
+2. Click **"Create Worker"**
+3. Name it `fitgirl-helper-api` → **Deploy**
+4. Click **"Edit Code"** → paste the contents of `worker/worker.js` → **Deploy**
+5. Go to **Settings → Variables and Secrets** and add:
+
+   | Variable | Type | Value |
+   |----------|------|-------|
+   | `GITHUB_TOKEN` | **Secret** | Your PAT from Step 2 |
+   | `GITHUB_OWNER` | Text | Your GitHub username |
+   | `GITHUB_REPO` | Text | Your repo name |
+   | `API_SECRET` | **Secret** | *(optional)* A random string to protect your API |
+
+6. Note your Worker URL: `https://fitgirl-helper-api.YOUR_SUBDOMAIN.workers.dev`
+
+**Option B: Wrangler CLI**
+
+```bash
+cd worker
+npm install -g wrangler
+wrangler login
+wrangler secret put GITHUB_TOKEN    # paste your PAT
+wrangler secret put API_SECRET      # optional
+wrangler deploy
+```
+
+Then add `GITHUB_OWNER` and `GITHUB_REPO` as plain text vars in the dashboard or `wrangler.toml`.
+
+### Step 4 — Set the Worker URL in the website
+
+Open `site/index.html` and replace `%%WORKER_URL%%` with your actual Worker URL:
+
+```js
+const API_URL = 'https://fitgirl-helper-api.your-subdomain.workers.dev';
+```
+
+### Step 5 — Deploy the website to Cloudflare Pages
+
+1. Go to Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages**
+2. Connect your GitHub repo
+3. Build settings:
+   - **Build command:** *(leave empty)*
+   - **Build output directory:** `site`
+4. **Deploy!**
+
+Your site is now live at `https://your-project.pages.dev` 🎉
+
+### Step 6 — Enable gh-pages branch
+
+The extraction workflow saves results to the `gh-pages` branch. Create it:
+
+```bash
+git checkout --orphan gh-pages
+git rm -rf .
+echo "results" > .gitignore
+mkdir results
+touch results/.gitkeep
+git add .
+git commit -m "init gh-pages"
+git push origin gh-pages
+git checkout main
+```
+
+---
+
+## ✅ That's it!
+
+Users visit your site → paste a URL → click Fetch → select parts → click Extract → get direct links.
+
+**They never see or touch any tokens, API keys, or configuration.**
+
+---
+
+## 🔒 Security
+
+| Concern | Answer |
+|---------|--------|
+| Where is the GitHub token? | Stored as an **encrypted secret** in Cloudflare Worker environment variables. Never exposed to the browser. |
+| Can someone abuse the Worker? | Set `API_SECRET` and add `?key=YOUR_SECRET` to the frontend `API_URL`, or implement rate limiting. |
+| What about CORS? | The Worker includes permissive CORS headers. Lock it down to your domain if needed. |
+
+---
+
+## 💰 Cost
+
+| Service | Free Tier |
+|---------|-----------|
+| Cloudflare Workers | 100,000 requests/day |
+| Cloudflare Pages | Unlimited static hosting |
+| GitHub Actions | 2,000 minutes/month (free tier) |
+
+Each extraction uses ~3-10 minutes of Actions time. You can run **200-600 extractions/month** for free.
+
+---
+
+## 📁 File Structure
 
 ```
-fitgirl-web/
 ├── .github/workflows/
-│   ├── fetch-links.yml      # Quick scan workflow
-│   ├── extract-links.yml    # Full extraction workflow
-│   └── deploy-site.yml      # Deploy website to gh-pages
-├── docs/
-│   └── index.html           # Web frontend (single-page app)
+│   └── extract-links.yml    # GitHub Actions extraction workflow
+├── worker/
+│   ├── worker.js            # Cloudflare Worker (API backend)
+│   └── wrangler.toml        # Wrangler configuration
 ├── scripts/
-│   ├── extract.py           # Full extraction script (Selenium)
-│   └── fetch_only.py        # Quick fetch script (requests only)
+│   └── extract.py           # Python extraction script (runs in Actions)
+├── site/
+│   └── index.html           # Frontend website
 └── README.md
 ```
 
 ---
 
-## ⚠️ Important Notes
+## 🔧 Optional: Protect the API
 
-- **GitHub Actions minutes**: Free accounts get 2,000 minutes/month. Each extraction uses ~3-10 minutes.
-- **Rate limits**: GitHub API has rate limits. Don't spam requests.
-- **Privacy**: Your PAT is stored in your browser's `localStorage` — never sent to any server except GitHub's API.
-- **Cloudflare changes**: If FuckingFast updates their Cloudflare config, the extraction might need updates.
+If you set `API_SECRET` in your Worker, update the frontend:
 
----
+```js
+const API_URL = 'https://fitgirl-helper-api.your-sub.workers.dev?key=YOUR_SECRET';
+```
 
-## 🔧 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "Workflow not found" | Make sure the workflow files exist in `.github/workflows/` |
-| "Resource not accessible" | Check that your PAT has `repo` + `workflow` scopes |
-| Results never appear | Check the Actions tab on GitHub for failed runs |
-| Links fail to extract | Cloudflare may have updated; check the extraction logs |
+Or better yet, add the key as a header in the `api()` function.
 
 ---
 
 ## 📝 License
 
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-## 🙏 Credits
-
-- Original desktop app: [MacReyhan/fitgirl_helper_redesigned](https://github.com/MacReyhan/fitgirl_helper_redesigned)
-- Upstream: [zouhirdev/fitgirl-ff-link-extractor](https://github.com/zouhirdev/fitgirl-ff-link-extractor)
-- [undetected-chromedriver](https://github.com/ultrafunkamsterdam/undetected-chromedriver) — Cloudflare bypass
-- [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) — HTML parsing
+MIT

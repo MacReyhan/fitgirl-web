@@ -1,204 +1,129 @@
 #!/usr/bin/env python3
 """
-FitGirl Link Extractor — GitHub Actions Backend Script
-Fetches FuckingFast links from a FitGirl repack page, then uses
-undetected-chromedriver to bypass Cloudflare and resolve direct download URLs.
-Results are saved as JSON for the web frontend.
+FitGirl Link Extractor — GitHub Actions Backend
+Fetches FuckingFast links then uses undetected-chromedriver to bypass
+Cloudflare and resolve direct download URLs.
 """
 
-import os
-import sys
-import re
-import json
-import time
-import shutil
-import requests
+import os, sys, re, json, time, requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 
-# ── Configuration ────────────────────────────────────────────────────────────
 FITGIRL_URL = os.environ.get("FITGIRL_URL", "")
 REQUEST_ID = os.environ.get("REQUEST_ID", "unknown")
 SELECTED_INDICES = os.environ.get("SELECTED_INDICES", "")
 
-OUTPUT_DIR = "output"
-PUBLISH_DIR = "publish/results"
-
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-os.makedirs(PUBLISH_DIR, exist_ok=True)
+os.makedirs("results", exist_ok=True)
 
 
-def save_result(data):
-    """Save result JSON to both output/ (artifact) and publish/results/ (gh-pages)."""
-    filename = f"{REQUEST_ID}.json"
-    for directory in [OUTPUT_DIR, PUBLISH_DIR]:
-        filepath = os.path.join(directory, filename)
-        with open(filepath, "w") as f:
-            json.dump(data, f, indent=2)
-    print(f"[✓] Results saved to {filename}")
+def save(data):
+    with open(f"results/{REQUEST_ID}.json", "w") as f:
+        json.dump(data, f, indent=2)
 
 
-def fetch_ff_links(url):
-    """Step 1: Scrape the FitGirl page for fuckingfast.co links."""
-    print(f"[*] Fetching page: {url}")
+def fetch_links(url):
+    print(f"[*] Fetching: {url}")
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    resp = requests.get(url, headers=headers, timeout=15)
-    resp.raise_for_status()
-
-    soup = BeautifulSoup(resp.text, "html.parser")
-    ff_links = []
-    seen = set()
+    r = requests.get(url, headers=headers, timeout=15)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "html.parser")
+    seen, links = set(), []
     for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if "fuckingfast.co" in href and href not in seen:
-            ff_links.append(href)
-            seen.add(href)
+        h = a["href"]
+        if "fuckingfast.co" in h and h not in seen:
+            links.append(h)
+            seen.add(h)
+    print(f"[✓] Found {len(links)} links")
+    return links
 
-    print(f"[✓] Found {len(ff_links)} FuckingFast links")
-    return ff_links
 
-
-def extract_direct_links(ff_links):
-    """Step 2: Use undetected-chromedriver to resolve direct download URLs."""
+def extract(ff_links):
     import undetected_chromedriver as uc
 
-    print("[*] Launching headless Chrome via undetected-chromedriver...")
-
-    options = uc.ChromeOptions()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
+    print("[*] Launching headless Chrome...")
+    opts = uc.ChromeOptions()
+    opts.add_argument("--headless=new")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
+    opts.add_argument("--disable-gpu")
 
     driver = None
     results = []
 
     try:
-        driver = uc.Chrome(options=options, use_subprocess=True)
-        total = len(ff_links)
+        driver = uc.Chrome(options=opts, use_subprocess=True)
 
         for i, link in enumerate(ff_links, 1):
-            filename = link.split("#")[-1] if "#" in link else link.split("/")[-1]
-            print(f"[*] Processing [{i}/{total}]: {filename}")
-
-            entry = {
-                "original_url": link,
-                "filename": filename,
-                "direct_url": None,
-                "status": "pending",
-            }
+            fn = link.split("#")[-1] if "#" in link else link.split("/")[-1]
+            print(f"[*] [{i}/{len(ff_links)}] {fn}")
+            entry = {"original_url": link, "filename": fn, "direct_url": None, "status": "pending"}
 
             try:
                 driver.get(link)
-                direct_url = None
-
-                # Wait up to 30 seconds for the window.open redirect
-                for attempt in range(30):
+                direct = None
+                for _ in range(30):
                     time.sleep(1)
                     try:
-                        page_source = driver.page_source
-                        match = re.search(r'window\.open\("([^"]+)"\)', page_source)
-                        if match:
-                            direct_url = match.group(1)
+                        m = re.search(r'window\.open\("([^"]+)"\)', driver.page_source)
+                        if m:
+                            direct = m.group(1)
                             break
-                    except Exception:
+                    except:
                         pass
 
-                if direct_url:
-                    entry["direct_url"] = direct_url
+                if direct:
+                    entry["direct_url"] = direct
                     entry["status"] = "success"
-                    print(f"    [✓] Resolved: {direct_url[:80]}...")
+                    print(f"    [✓] {direct[:80]}...")
                 else:
                     entry["status"] = "failed"
-                    print(f"    [✗] Failed to resolve direct URL")
-
+                    print(f"    [✗] Could not resolve")
             except Exception as e:
                 entry["status"] = "error"
                 entry["error"] = str(e)
-                print(f"    [!] Error: {e}")
+                print(f"    [!] {e}")
 
             results.append(entry)
-
     finally:
         if driver:
-            try:
-                driver.quit()
-            except Exception:
-                pass
+            try: driver.quit()
+            except: pass
 
     return results
 
 
 def main():
     if not FITGIRL_URL:
-        save_result({
-            "request_id": REQUEST_ID,
-            "status": "error",
-            "error": "No URL provided",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        save({"request_id": REQUEST_ID, "status": "error", "error": "No URL",
+              "timestamp": datetime.now(timezone.utc).isoformat()})
         sys.exit(1)
 
-    result_data = {
-        "request_id": REQUEST_ID,
-        "url": FITGIRL_URL,
-        "status": "processing",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "links": [],
-        "direct_links": [],
-    }
+    data = {"request_id": REQUEST_ID, "url": FITGIRL_URL, "status": "processing",
+            "timestamp": datetime.now(timezone.utc).isoformat(), "direct_links": []}
 
     try:
-        # Step 1: Fetch links
-        ff_links = fetch_ff_links(FITGIRL_URL)
-
-        if not ff_links:
-            result_data["status"] = "error"
-            result_data["error"] = "No FuckingFast links found on the page"
-            save_result(result_data)
+        ff = fetch_links(FITGIRL_URL)
+        if not ff:
+            data["status"] = "error"
+            data["error"] = "No FuckingFast links found"
+            save(data)
             sys.exit(1)
 
-        # Filter by selected indices if provided
         if SELECTED_INDICES.strip():
-            indices = [int(x.strip()) for x in SELECTED_INDICES.split(",") if x.strip().isdigit()]
-            ff_links = [ff_links[i] for i in indices if 0 <= i < len(ff_links)]
-            print(f"[*] Filtered to {len(ff_links)} selected links")
+            idx = [int(x.strip()) for x in SELECTED_INDICES.split(",") if x.strip().isdigit()]
+            ff = [ff[i] for i in idx if 0 <= i < len(ff)]
 
-        result_data["links"] = ff_links
-
-        # Step 2: Extract direct links
-        extraction_results = extract_direct_links(ff_links)
-        result_data["direct_links"] = extraction_results
-
-        # Summary
-        success_count = sum(1 for r in extraction_results if r["status"] == "success")
-        result_data["status"] = "completed"
-        result_data["summary"] = {
-            "total": len(extraction_results),
-            "success": success_count,
-            "failed": len(extraction_results) - success_count,
-        }
-
-        print(f"\n[✓] Done! {success_count}/{len(extraction_results)} links resolved successfully.")
-
+        results = extract(ff)
+        data["direct_links"] = results
+        ok = sum(1 for r in results if r["status"] == "success")
+        data["status"] = "completed"
+        data["summary"] = {"total": len(results), "success": ok, "failed": len(results) - ok}
+        print(f"\n[✓] {ok}/{len(results)} resolved")
     except Exception as e:
-        result_data["status"] = "error"
-        result_data["error"] = str(e)
-        print(f"[!] Fatal error: {e}")
+        data["status"] = "error"
+        data["error"] = str(e)
 
-    save_result(result_data)
-
-    # Also copy the frontend files to publish/ so gh-pages always has them
-    if os.path.exists("docs"):
-        for item in os.listdir("docs"):
-            src = os.path.join("docs", item)
-            dst = os.path.join("publish", item)
-            if os.path.isfile(src):
-                shutil.copy2(src, dst)
-            elif os.path.isdir(src) and item != "results":
-                if os.path.exists(dst):
-                    shutil.rmtree(dst)
-                shutil.copytree(src, dst)
+    save(data)
 
 
 if __name__ == "__main__":

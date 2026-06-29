@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitGirl Helper</title>
+<style>
+:root{--font:'Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif;--r:8px;--rl:12px;--t:180ms cubic-bezier(.4,0,.2,1)}
+[data-theme="dark"]{--bg:#1a1a2e;--bg2:#16213e;--card:#1e293b;--card2:#253347;--input:#2a3a50;--inputf:#334766;--bdr:#334155;--bdrf:#60a5fa;--tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;--acc:#60a5fa;--acc2:#93c5fd;--acctx:#0c1524;--ok:#4ade80;--err:#f87171;--warn:#fbbf24;--sb:#475569;--tg:rgba(96,165,250,.1);--glow:0 0 20px rgba(96,165,250,.15)}
+[data-theme="light"]{--bg:#f0f4f8;--bg2:#e2e8f0;--card:#fff;--card2:#f8fafc;--input:#f1f5f9;--inputf:#fff;--bdr:#e2e8f0;--bdrf:#3b82f6;--tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;--acc:#3b82f6;--acc2:#2563eb;--acctx:#fff;--ok:#16a34a;--err:#dc2626;--warn:#d97706;--sb:#cbd5e1;--tg:rgba(59,130,246,.06);--glow:0 0 20px rgba(59,130,246,.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;transition:background var(--t),color var(--t)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--sb);border-radius:3px}
+
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 0 20px}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;background:linear-gradient(135deg,var(--acc),#a855f7);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800}
+.hdr h1{font-size:18px;font-weight:600;letter-spacing:-.3px}
+.hdr h1 span{font-weight:400;color:var(--tx2);font-size:13px;margin-left:6px}
+.thm{width:40px;height:24px;background:var(--input);border:1px solid var(--bdr);border-radius:12px;cursor:pointer;position:relative;transition:all var(--t);flex-shrink:0}
+.thm::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:var(--acc);border-radius:50%;transition:transform var(--t)}
+[data-theme="light"] .thm::after{transform:translateX(16px)}
+.thm:hover{border-color:var(--acc)}
+
+/* Cards */
+.c{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:var(--glow);transition:all var(--t)}
+.c:hover{border-color:color-mix(in srgb,var(--acc) 30%,var(--bdr))}
+.ct{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* Input */
+.ig{display:flex;gap:8px}
+.ig input{flex:1;padding:10px 14px;background:var(--input);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-size:14px;font-family:var(--font);outline:none;transition:all var(--t)}
+.ig input:focus{background:var(--inputf);border-color:var(--bdrf);box-shadow:0 0 0 3px rgba(96,165,250,.12)}
+.ig input::placeholder{color:var(--tx3)}
+
+/* Buttons */
+.b{padding:10px 18px;border:none;border-radius:var(--r);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all var(--t);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.bp{background:var(--acc);color:var(--acctx)}
+.bp:hover:not(:disabled){background:var(--acc2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(96,165,250,.25)}
+.bs{background:var(--input);color:var(--tx);border:1px solid var(--bdr)}
+.bs:hover:not(:disabled){border-color:var(--acc);background:var(--card2)}
+.b:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.bsm{padding:6px 12px;font-size:11px}
+
+/* Status */
+.st{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;color:var(--tx2);margin-bottom:14px;transition:all var(--t)}
+.st.ok{border-color:var(--ok);color:var(--ok)}.st.er{border-color:var(--err);color:var(--err)}.st.pr{border-color:var(--warn);color:var(--warn)}
+.sd{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.st.pr .sd{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* Checklist */
+.cl{max-height:260px;overflow-y:auto;margin-bottom:10px}
+.ci{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--r);transition:background var(--t);cursor:pointer}
+.ci:hover{background:var(--input)}
+.ci input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc);cursor:pointer;flex-shrink:0}
+.ci label{font-size:12px;color:var(--tx);cursor:pointer;word-break:break-all;flex:1;font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+.ci .ib{font-size:10px;color:var(--tx3);background:var(--input);padding:2px 6px;border-radius:4px;font-weight:700;flex-shrink:0}
+.ca{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* Progress */
+.pc{height:3px;background:var(--input);border-radius:2px;overflow:hidden;margin-bottom:14px}
+.pf{height:100%;background:linear-gradient(90deg,var(--acc),#a855f7);border-radius:2px;transition:width .4s ease;width:0%}
+.pf.ind{width:28%;animation:ind 1.4s ease-in-out infinite}
+@keyframes ind{0%{transform:translateX(-100%)}100%{transform:translateX(450%)}}
+
+/* Output */
+.oa{background:var(--input);border:1px solid var(--bdr);border-radius:var(--r);padding:12px;min-height:100px;max-height:320px;overflow-y:auto;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:11.5px;line-height:1.9;color:var(--tx);word-break:break-all}
+.oa .ll{padding:3px 0;border-bottom:1px solid var(--bdr)}.oa .ll:last-child{border:0}
+.oa .ll a{color:var(--acc);text-decoration:none}.oa .ll a:hover{text-decoration:underline}
+.oa .ll.fl{color:var(--err)}
+.oact{display:flex;gap:6px;margin-top:10px;justify-content:flex-end}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}
+.stp{padding:14px;background:var(--input);border-radius:var(--r);text-align:center}
+.sn{width:28px;height:28px;background:var(--acc);color:var(--acctx);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:6px}
+.stp h3{font-size:13px;font-weight:600;margin-bottom:2px}
+.stp p{font-size:11px;color:var(--tx2)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.2);font-size:13px;color:var(--tx);z-index:999;transform:translateY(80px);opacity:0;transition:all 280ms ease;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--ok)}.toast.er{border-color:var(--err)}
+
+.footer{text-align:center;padding:20px 0 0;font-size:11px;color:var(--tx3)}
+.footer a{color:var(--acc);text-decoration:none}.footer a:hover{text-decoration:underline}
+
+.hide{display:none!important}
+
+/* config banner */
+.cfg-banner{background:color-mix(in srgb,var(--warn) 12%,var(--card));border:1px solid var(--warn);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--warn);display:flex;align-items:center;gap:8px}
+
+@media(max-width:560px){.ig{flex-direction:column}.hdr h1 span{display:block;margin-left:0;margin-top:2px}.steps{grid-template-columns:1fr}.ca{justify-content:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">F</div>
+    <h1>FitGirl Helper <span>Web</span></h1>
+  </div>
+  <button class="thm" onclick="toggleTheme()" title="Toggle theme"></button>
+</div>
+
+<!-- Worker not configured banner (shown if API_URL not set) -->
+<div class="cfg-banner hide" id="cfgBanner">
+  ⚠️ Worker URL not configured. See the README for setup instructions.
+</div>
+
+<!-- URL Input -->
+<div class="c">
+  <div class="ct">🔗 Repack URL</div>
+  <div class="ig">
+    <input type="url" id="urlInput" placeholder="https://fitgirl-repacks.site/game-name/">
+    <button class="b bp" id="fetchBtn" onclick="doFetch()">🔍 Fetch</button>
+  </div>
+</div>
+
+<!-- Status -->
+<div class="st" id="statusBar">
+  <div class="sd"></div>
+  <span id="statusText">Paste a FitGirl URL and click Fetch</span>
+</div>
+
+<!-- Progress -->
+<div class="pc"><div class="pf" id="pf"></div></div>
+
+<!-- Checklist -->
+<div class="c hide" id="clCard">
+  <div class="ct">📦 Found Parts</div>
+  <div id="gameTitle" style="font-size:15px;font-weight:600;margin-bottom:8px"></div>
+  <div class="cl" id="cl"></div>
+  <div class="ca">
+    <button class="b bs bsm" onclick="selAll(true)">✅ All</button>
+    <button class="b bs bsm" onclick="selAll(false)">⬜ None</button>
+    <div style="flex:1"></div>
+    <button class="b bp" id="exBtn" onclick="doExtract()">🚀 Extract Direct Links</button>
+  </div>
+</div>
+
+<!-- Output -->
+<div class="c hide" id="outCard">
+  <div class="ct">📋 Direct Download Links</div>
+  <div class="oa" id="outArea"></div>
+  <div class="oact">
+    <button class="b bs bsm" onclick="clrOut()">🗑️ Clear</button>
+    <button class="b bp bsm" onclick="copyLinks()">📋 Copy All</button>
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="c">
+  <div class="ct">ℹ️ How It Works</div>
+  <div class="steps">
+    <div class="stp"><div class="sn">1</div><h3>Paste URL</h3><p>Any FitGirl repack page</p></div>
+    <div class="stp"><div class="sn">2</div><h3>Select Parts</h3><p>Pick the files you want</p></div>
+    <div class="stp"><div class="sn">3</div><h3>Extract</h3><p>Server-side Chrome bypasses Cloudflare</p></div>
+  </div>
+</div>
+
+<div class="footer">
+  FitGirl Helper Web &mdash; Powered by Cloudflare Workers &amp; GitHub Actions<br>
+  <a href="https://github.com/MacReyhan/fitgirl_helper_redesigned" target="_blank">Source</a>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*─────────────────────────────────────────────────────────
+  CONFIGURATION — Change this to your Cloudflare Worker URL
+  after deployment. That's the ONLY thing to change.
+─────────────────────────────────────────────────────────*/
+const API_URL = '%%WORKER_URL%%';  // e.g. "https://fitgirl-helper-api.yourname.workers.dev"
+
+/*──── State ────*/
+let links = [];
+let reqId = null;
+let poll = null;
+
+/*──── Init ────*/
+(function(){
+  const t = localStorage.getItem('fgh_t') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  if (API_URL.includes('%%')) {
+    document.getElementById('cfgBanner').classList.remove('hide');
+  }
+})();
+
+/*──── Theme ────*/
+function toggleTheme(){
+  const h = document.documentElement;
+  const n = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  h.setAttribute('data-theme', n);
+  localStorage.setItem('fgh_t', n);
+}
+
+/*──── Helpers ────*/
+function $(id){return document.getElementById(id)}
+function status(t, cls=''){const b=$('statusBar');b.className='st '+ cls;$('statusText').textContent=t}
+function prog(p, ind=false){const f=$('pf');if(ind){f.classList.add('ind');f.style.width='28%'}else{f.classList.remove('ind');f.style.width=p+'%'}}
+function toast(m, t=''){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function gid(){return 'r_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
+
+async function api(path, method='GET', body=null){
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(API_URL + path, opts);
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error || `API error ${r.status}`);
+  return d;
+}
+
+/*──── Fetch (Step 1) — instant via Worker ────*/
+async function doFetch(){
+  const url = $('urlInput').value.trim();
+  if(!url){toast('Enter a URL first','er');return}
+  if(API_URL.includes('%%')){toast('Configure your Worker URL first!','er');return}
+
+  $('fetchBtn').disabled = true;
+  $('clCard').classList.add('hide');
+  $('outCard').classList.add('hide');
+  links = [];
+  status('Fetching links...','pr');
+  prog(0,true);
+
+  try{
+    const d = await api('/fetch', 'POST', {url});
+    links = d.links || [];
+
+    if(!links.length){
+      status('No FuckingFast links found on that page','er');
+      toast('No links found','er');
+      $('fetchBtn').disabled = false;
+      prog(0);
+      return;
+    }
+
+    // Show title
+    $('gameTitle').textContent = d.game_title || '';
+
+    // Build checklist
+    const cl = $('cl');
+    cl.innerHTML = '';
+    links.forEach((lk, i) => {
+      const div = document.createElement('div');
+      div.className = 'ci';
+      div.innerHTML = `<span class="ib">${i+1}</span><input type="checkbox" id="lk${i}" checked><label for="lk${i}">${esc(lk.filename)}</label>`;
+      cl.appendChild(div);
+    });
+
+    $('clCard').classList.remove('hide');
+    $('exBtn').disabled = false;
+    status(`Found ${links.length} links — select and extract!`, 'ok');
+    toast(`${links.length} links found!`, 'ok');
+    prog(100);
+  } catch(e){
+    status('Error: ' + e.message, 'er');
+    toast(e.message, 'er');
+    prog(0);
+  }
+  $('fetchBtn').disabled = false;
+}
+
+/*──── Extract (Step 2) — triggers GitHub Actions via Worker ────*/
+async function doExtract(){
+  if(API_URL.includes('%%')){toast('Configure Worker URL!','er');return}
+
+  const sel = [];
+  document.querySelectorAll('#cl input[type=checkbox]').forEach((cb,i)=>{if(cb.checked) sel.push(i)});
+  if(!sel.length){toast('Select at least one link','er');return}
+
+  $('exBtn').disabled = true;
+  $('fetchBtn').disabled = true;
+  status('Triggering extraction...','pr');
+  prog(0,true);
+
+  reqId = gid();
+  const url = $('urlInput').value.trim();
+
+  try{
+    const d = await api('/extract', 'POST', {
+      url, request_id: reqId, selected_indices: sel.join(',')
+    });
+    status('Extraction started — Chrome running on server...','pr');
+    toast('Workflow triggered! Please wait ~2-5 min','ok');
+    pollResults(reqId);
+  } catch(e){
+    status('Error: '+e.message,'er');
+    toast(e.message,'er');
+    $('exBtn').disabled = false;
+    $('fetchBtn').disabled = false;
+    prog(0);
+  }
+}
+
+/*──── Poll for results ────*/
+function pollResults(id){
+  if(poll) clearInterval(poll);
+  let n = 0;
+  const max = 120; // 10 minutes
+
+  poll = setInterval(async ()=>{
+    n++;
+    if(n > max){
+      clearInterval(poll);
+      status('Timed out. Check GitHub Actions tab.','er');
+      $('exBtn').disabled = false;
+      $('fetchBtn').disabled = false;
+      prog(0);
+      return;
+    }
+
+    try{
+      const d = await api('/status/' + id);
+
+      if(d.status === 'ready' && d.data){
+        clearInterval(poll);
+        showResults(d.data);
+        return;
+      }
+
+      // Update status with workflow info
+      const ws = d.workflow_status || 'pending';
+      status(`Waiting... ${ws} (${n*5}s elapsed)`, 'pr');
+
+    } catch(e){
+      status(`Polling... (${n*5}s)`, 'pr');
+    }
+  }, 5000);
+}
+
+/*──── Show extraction results ────*/
+function showResults(data){
+  prog(100);
+  $('exBtn').disabled = false;
+  $('fetchBtn').disabled = false;
+
+  if(data.status === 'error'){
+    status('Error: '+(data.error||'Unknown'),'er');
+    toast(data.error||'Failed','er');
+    return;
+  }
+
+  const out = $('outArea');
+  out.innerHTML = '';
+  const dl = data.direct_links || [];
+
+  dl.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'll' + (e.status !== 'success' ? ' fl' : '');
+    if(e.status === 'success' && e.direct_url){
+      div.innerHTML = `<a href="${esc(e.direct_url)}" target="_blank">${esc(e.direct_url)}</a>`;
+    } else {
+      div.textContent = `✗ FAILED: ${e.filename}`;
+    }
+    out.appendChild(div);
+  });
+
+  $('outCard').classList.remove('hide');
+  const s = data.summary || {};
+  status(`Done! ${s.success||0}/${s.total||0} links extracted`, 'ok');
+  toast('Extraction complete!', 'ok');
+}
+
+/*──── Checklist ────*/
+function selAll(v){document.querySelectorAll('#cl input[type=checkbox]').forEach(c=>c.checked=v)}
+
+/*──── Output ────*/
+function clrOut(){$('outArea').innerHTML='';prog(0)}
+function copyLinks(){
+  const a=[...document.querySelectorAll('#outArea .ll a')].map(l=>l.href);
+  if(!a.length){toast('Nothing to copy','er');return}
+  navigator.clipboard.writeText(a.join('\n')).then(()=>toast(a.length+' links copied!','ok')).catch(()=>{
+    const t=document.createElement('textarea');t.value=a.join('\n');document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast(a.length+' links copied!','ok');
+  });
+}
+</script>
+</body>
+</html>
