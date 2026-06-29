@@ -1,0 +1,48 @@
+name: Fetch FitGirl Links (Quick Scan)
+
+on:
+  workflow_dispatch:
+    inputs:
+      fitgirl_url:
+        description: 'FitGirl repack page URL'
+        required: true
+        type: string
+      request_id:
+        description: 'Unique request ID for result tracking'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Fetch links
+        env:
+          FITGIRL_URL: ${{ github.event.inputs.fitgirl_url }}
+          REQUEST_ID: ${{ github.event.inputs.request_id }}
+        run: python scripts/fetch_only.py
+
+      - name: Deploy results to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish
+          keep_files: true
+          destination_dir: .

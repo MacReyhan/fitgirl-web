@@ -1,0 +1,67 @@
+name: Extract FitGirl Links
+
+on:
+  workflow_dispatch:
+    inputs:
+      fitgirl_url:
+        description: 'FitGirl repack page URL'
+        required: true
+        type: string
+      request_id:
+        description: 'Unique request ID for result tracking'
+        required: true
+        type: string
+      selected_indices:
+        description: 'Comma-separated indices of selected links (empty = all)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 selenium undetected-chromedriver
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 'stable'
+
+      - name: Run extraction script
+        env:
+          FITGIRL_URL: ${{ github.event.inputs.fitgirl_url }}
+          REQUEST_ID: ${{ github.event.inputs.request_id }}
+          SELECTED_INDICES: ${{ github.event.inputs.selected_indices }}
+        run: python scripts/extract.py
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extraction-results-${{ github.event.inputs.request_id }}
+          path: output/
+          retention-days: 7
+
+      - name: Deploy results to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish
+          keep_files: true
+          destination_dir: .
